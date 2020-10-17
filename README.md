@@ -1,7 +1,7 @@
 # MiniRobot Chassis Generator
 
 <h1 align="center">
-	<img width="853" src="https://github.com/dnkorte/sanitizer/blob/master/pictures/screenshot1.png" alt="screenshot of generator in use"><br>MiniRobot Chassis Generator
+	<img width="853" src="https://github.com/dnkorte/minirobot_chassis/blob/master/pictures/screenshot1.png" alt="screenshot of generator in use"><br>MiniRobot Chassis Generator
 </h1>
 
 
