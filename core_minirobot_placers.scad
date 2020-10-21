@@ -344,12 +344,6 @@ module place_box_bottom_combo() {
         // tb6612 is 30mm and feather is 52mm
         translate([ +12, 0, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
     }
-
-
-//QWIIC I2C Motor Driver
-//QWIIC I2C Motor Driver + Small-Mint
-//QWIIC I2C Motor Driver + Feather
-
     
     if ((box_bottom_PCB == "QWIIC I2C Motor Driver + Small-Mint") && (part == "box")) {
         translate([ -28, -5, body_bottom_thickness]) rotate([ 0, 0, -90 ]) rotate([ 0, 0, 90 ]) component_qwiic_motor_driver();
@@ -370,9 +364,6 @@ module place_box_bottom_combo() {
             translate([ +14, 0, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
         }
     }  
-
-
-
         
     if ((box_bottom_PCB == "L298 and Small-Mint") && (part == "box")) {
         //translate([ -19, 0, body_bottom_thickness]) component_L298motor_driver();
@@ -482,9 +473,6 @@ module place_box_bottom_combo() {
         translate([ (box_front_x + body_wall_thickness + 18), -((box_width/2)-28), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
         translate([ 5, 4, body_bottom_thickness]) component_small_red_protoboard_lifted(board_raise_amount);
     }
-
-
-
 
     if ((box_bottom_PCB == "F/B Small-Mint + Raised Ctr Feather") && (part == "box")) {
         // small_red_protoboard is 52mm x 28mm
@@ -737,6 +725,82 @@ module place_easydriver() {
     }
 }
 
+
+
+
+
+/*
+ * ***************************************************************************
+ * this places wire portals around the periphery of the lid
+ * ***************************************************************************
+ */
+
+module place_lid_wire_ports(mode="holes") {
+    
+    if ((has_wire_port_front) && (part == "lid")) {
+        translate([ (lid_front_x - lid_lip_thickness - 10), 0, -0.1]) rotate([ 0, 0, 90 ]) component_lid_wire_port(mode);
+    }
+    
+    if ((has_wire_port_backcenter) && (part == "lid")) {
+        translate([ (lid_back_x + lid_lip_thickness + 10), 0, -0.1]) rotate([ 0, 0, 90 ]) component_lid_wire_port(mode);
+    }
+    
+    if ((has_wire_port_left) && (part == "lid")) {
+        translate([ -15, (lid_L_y + lid_lip_thickness + 6 ), -0.1]) component_lid_wire_port(mode);
+    }
+    
+    if ((has_wire_port_right) && (part == "lid")) {
+        translate([ -15, (lid_R_y - lid_lip_thickness - 6 ), -0.1]) component_lid_wire_port(mode);
+    }
+    
+    if ((has_wire_port_backleft) && (part == "lid")) {
+        translate([ (lid_back_x + lid_lip_thickness + 6), -18, -0.1]) rotate([ 0, 0, 90 ]) component_lid_wire_port(mode);
+    }
+    
+    if ((has_wire_port_backright) && (part == "lid")) {
+        translate([ (lid_back_x + lid_lip_thickness + 6), 18, -0.1]) rotate([ 0, 0, 90 ]) component_lid_wire_port(mode);
+    }
+
+
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff)
+     * these optionally show the lid components when generally displaying the box itself.  the "component" builders have a special
+     * mode called "lidcheck" that shows them in blue but otherwise similar to normal mode.  this mode is only available on parts
+     * that might be reasonably expected to live on the lid.  
+     *
+     * note that the actual translatations/rotations of of these components is identical to the box placements above, excepting for the 
+     * mode declaration ("lidcheck") and the fact that is called for part == "box" instead of "lid".  
+     * the outer translate / rotate here takes care of moving all lidcheck pieces at once
+     */
+    
+    translate([ 0, 0, (height_of_box + lid_thickness) ]) rotate([ 0, 180, 0 ]) union() {    
+        if ((has_wire_port_front) && (part == "box")) {
+            translate([ (lid_front_x - lid_lip_thickness - 10), 0, -0.1]) rotate([ 0, 0, 90 ]) color([ 0.9, 0.9, 0.9 ]) component_lid_wire_port("lidcheck");
+        }
+        
+        if ((has_wire_port_backcenter) && (part == "box")) {
+            translate([ (lid_back_x + lid_lip_thickness + 10), 0, -0.1]) rotate([ 0, 0, 90 ]) component_lid_wire_port("lidcheck");
+        }
+        
+        if ((has_wire_port_left) && (part == "box")) {
+            translate([ -15, (lid_L_y + lid_lip_thickness + 6 ), -0.1]) component_lid_wire_port("lidcheck");
+        }
+        
+        if ((has_wire_port_right) && (part == "box")) {
+            translate([ -15, (lid_R_y - lid_lip_thickness - 6 ), -0.1]) component_lid_wire_port("lidcheck");
+        }
+        
+        if ((has_wire_port_backleft) && (part == "box")) {
+            translate([ (lid_back_x + lid_lip_thickness + 6), -18, -0.1]) rotate([ 0, 0, 90 ]) component_lid_wire_port("lidcheck");
+        }
+        
+        if ((has_wire_port_backright) && (part == "box")) {
+            translate([ (lid_back_x + lid_lip_thickness + 6), 18, -0.1]) rotate([ 0, 0, 90 ]) component_lid_wire_port("lidcheck");
+        }
+    }
+
+
+}
 
 /*
  * ****************************************************************************************

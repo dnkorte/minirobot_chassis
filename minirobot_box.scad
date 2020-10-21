@@ -65,9 +65,17 @@ has_beeper = false;
 /* [Advanced Box Features] */
 has_grabber_mounts_narrow = false;
 has_grabber_mounts_wide = false;
+has_flora_eyes = false;
+has_front_neopixel_strip = false;
+has_back_neopixel_strip_horizontal = false;
+has_back_neopixel_strip_vertical = false;
 has_front_sonar = false;
 has_back_sonar = false;
-linesensor_snout = "none";    // ["none", "PermaProto Small-Mint", "Dual Perma", "Red Tindie Proto"]
+has_front_TOF_sensor = false;
+has_back_TOF_sensor = false;
+has_side_TOF_sensors = false;
+has_downshooting_edge_sensors = false;
+linesensor_snout = "none";    // ["none", "Standard Size", "Extended"]
 
 /* [Inside-Box Electronics Boards] */
 box_bottom_PCB = "PermaProto Mini-Tin"; // ["none", "PermaProto Small-Mint", "Dual Small-Mint", "PermaProto HalfSize", "Red Tindie Proto", "Dual Red Tindie", "Triple Red Tindie", "Feather", "Feather Doubler", "Feather Tripler", "TB6612", "Dual TB6612", "TB6612 and Small-Mint", "Dual TB6612 and Small-Mint", "TB6612 and Feather", "Dual TB6612 and Feather", "QWIIC I2C Motor Driver", "QWIIC I2C Motor Driver + Small-Mint", "QWIIC I2C Motor Driver + Feather",  "L298_motor_driver", "L298 and Small-Mint", "L298 and Feather", "Geared Stepper Driver", "Dual Geared Stepper Driver", "Dual Geared Stepper Driver and Small-Mint", "Dual Geared Stepper Driver and Feather", "Dual Sparkfun EasyDriver", "Dual Sparkfun EasyDriver + Small-Mint", "Dual Sparkfun EasyDriver + Feather", "3 Small-Mint Inline", "Front Small-Mint + Raised Ctr Small-Mint", "F/B Small-Mint + Raised Ctr Small-Mint", "Front Red Tindie + Raised Ctr Red Tindie", "F/B Red Tindie + Raised Ctr Red Tindie", "Front Small-Mint + Raised Ctr Feather", "F/B Small-Mint + Raised Ctr Feather", "Front Red Tindie + Raised Ctr Feather", "F/B Red Tindie + Raised Ctr Feather"]
@@ -80,6 +88,14 @@ has_button_lid_left = false;
 has_button_lid_right = false;
 has_toggle_lid_left = false;
 has_toggle_lid_right = false;
+has_wire_port_front = false;
+has_wire_port_left = false;
+has_wire_port_right = false;
+has_wire_port_backleft = false;
+has_wire_port_backcenter = false;
+has_wire_port_backright = false;
+has_neopixel_strip = false;
+
 
 /* [Motors, Wheels and Casters] */
 
@@ -288,12 +304,12 @@ module box() {
         
       
        // create mounting holes along y side
-        translate([-(box_length/2), 0, (height_of_box - mount_center_offset_from_boxtop)]) rotate([0,90,0])  
-              cylinder(box_length, screwhole_radius_M30_passthru, screwhole_radius_M30_passthru);
+        translate([-(box_length/2)-0.1, 0, (height_of_box - mount_center_offset_from_boxtop)]) rotate([0,90,0])  
+              cylinder(h=box_length+0.2, r=screwhole_radius_M30_passthru);
       
         // create mounting holes along x side
-        translate([0, -(box_width/2), (height_of_box - mount_center_offset_from_boxtop)]) rotate([0,90,90])  
-              cylinder(box_width, screwhole_radius_M30_passthru, screwhole_radius_M30_passthru);
+        translate([0, -(box_width/2)-0.1, (height_of_box - mount_center_offset_from_boxtop)]) rotate([0,90,90])  
+              cylinder(h=box_width+0.2, r=screwhole_radius_M30_passthru);
         
         // now enter all the parts that are removed from the box
         place_mini_toggle_switch("holes");
@@ -307,6 +323,7 @@ module box() {
         place_battery("holes");
         place_power_distribution("holes");
         place_boost_buck("holes");
+        place_lid_wire_ports("holes");
     }
     
     // now if we want to check for collisions, we show a blue image of lid lip
@@ -345,11 +362,12 @@ module box() {
     place_battery("adds");
     place_power_distribution("adds");
     place_boost_buck("adds");
+    place_lid_wire_ports("adds");
 }
 
 module lid() {
     difference() {
-        // here enter all the parts that "add" to the piece
+        // here enter all the parts that "remove" from the lid
         union() {
             roundedbox(box_length, box_width, box_corner_radius, lid_thickness);
             translate([0, 0, lid_thickness]) lip();  
@@ -362,6 +380,7 @@ module lid() {
         place_battery("holes");
         place_power_distribution("holes");
         place_boost_buck(mode="holes");
+        place_lid_wire_ports("holes");
     }
     
     // now enter the parts that are added to the lid
@@ -371,5 +390,6 @@ module lid() {
     place_battery("adds");
     place_power_distribution("adds");
     place_boost_buck(mode="adds");
+    place_lid_wire_ports("adds");
 }
 

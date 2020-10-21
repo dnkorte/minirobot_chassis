@@ -122,12 +122,12 @@ module TI30_mount(mount_height = TI30_default_height) {
     if (TI30_use_threaded_insert) {
         difference() {
             cylinder(r=((TI30_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=(TI30_through_hole_diameter / 2), h=mount_height); 
+            translate([ 0, 0, -0.1 ]) cylinder(r=(TI30_through_hole_diameter / 2), h=mount_height + 0.2); 
         }
     } else {
         difference() {
             cylinder(r=((TI30_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=screwhole_radius_M30_selftap, h=mount_height+0.1); 
+            translate([ 0, 0, -0.1 ]) cylinder(r=screwhole_radius_M30_selftap, h=mount_height + 0.2); 
         }
     } 
 }
@@ -139,12 +139,12 @@ module TI20_mount(mount_height = TI20_default_height) {
     if (TI20_use_threaded_insert) {
         difference() {
             cylinder(r=((TI20_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=(TI20_through_hole_diameter / 2), h=mount_height); 
+            translate([ 0, 0, -0.1 ]) cylinder(r=(TI20_through_hole_diameter / 2), h=mount_height + 0.2); 
         }
     } else {
         difference() {
             cylinder(r=((TI20_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=screwhole_radius_M20_selftap, h=mount_height+0.1); 
+            translate([ 0, 0, -0.1 ]) cylinder(r=screwhole_radius_M20_selftap, h=mount_height + 0.2); 
         }
     } 
 }
@@ -157,12 +157,12 @@ module TI25_mount(mount_height = TI25_default_height) {
     if (TI25_use_threaded_insert) {
         difference() {
             cylinder(r=((TI25_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=(TI25_through_hole_diameter / 2), h=mount_height); 
+            translate([ 0, 0, -0.1 ]) cylinder(r=(TI25_through_hole_diameter / 2), h=mount_height + 0.2); 
         }
     } else {
         difference() {
             cylinder(r=((TI25_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=screwhole_radius_M25_selftap, h=mount_height+0.1); 
+            translate([ 0, 0, -0.1 ]) cylinder(r=screwhole_radius_M25_selftap, h=mount_height + 0.2); 
         }
     } 
 }
@@ -181,7 +181,7 @@ module support_stud(mount_height = TI30_default_height) {
 module M25_short_mount(mount_height = 5) {
     difference() {
         cylinder(r=((5 / 2) + 0.05), h=mount_height);
-        cylinder(r=screwhole_radius_M25_selftap, h=mount_height+0.1); 
+        translate([ 0, 0, -0.1 ]) cylinder(r=screwhole_radius_M25_selftap, h=mount_height + 0.2); 
     }
 }
 
@@ -971,7 +971,7 @@ module component_mini_toggle_switch(mode="holes") {
     // note make the holes lid_thickness instead of body_wall_thickness because the lid
     // is probably thicker than body wall; 
     if (mode == "holes") {
-        cylinder( r=hole_radius, h=lid_thickness+0.1 );
+        translate([ 0, 0, -0.1 ]) cylinder( r=hole_radius, h=lid_thickness+0.2 );
     }
     
     if (mode == "adds") {
@@ -1028,9 +1028,9 @@ module component_adafruit_illuminated_pushbutton(mode="holes") {
     // this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
     if (mode == "holes") {
         difference() {
-            cylinder( r=(17/2), h=6);
-            translate([-9,7.55,0]) cube([18,2,6]);
-            translate([-9,-9.55,0]) cube([18,2,6]);
+            translate([ 0, 0, -0.1 ]) cylinder( r=(17/2), h=6);
+            translate([ 0, 0, -0.1 ]) translate([-9,7.55,0]) cube([18,2,6]);
+            translate([ 0, 0, -0.1 ]) translate([-9,-9.55,0]) cube([18,2,6]);
         }
     }
     if (mode == "adds") {
@@ -1095,7 +1095,7 @@ module component_arcade_button(mode="holes") {
     switch_body_depth = 19;
     
     if (mode == "holes") {
-        cylinder( r=(hole_dia / 2), h=body_wall_thickness );  // the pass-through hole
+        translate([ 0, 0, -0.1 ]) cylinder( r=(hole_dia / 2), h=body_wall_thickness+0.2 );  // the pass-through hole
         translate([ 0, 0, push_thickness ]) cylinder( r=(finger_hole_dia / 2), h=body_wall_thickness + 0.1 );  // lip for switch fingers
     }
     
@@ -1132,9 +1132,9 @@ module component_geared_stepper_motor(mode="holes") {
     // this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
     
     if (mode == "holes") {
-        translate([ 0, -8, 0 ]) cylinder( r=(8 / 2), h=body_wall_thickness+0.1 );  // the shaft hole
-        translate([ -(35/2), 0, 0 ]) cylinder( r=(screwhole_radius_M30_passthru), h=body_wall_thickness+0.1 );  // mount hole
-        translate([ +(35/2), 0, 0 ]) cylinder( r=(screwhole_radius_M30_passthru), h=body_wall_thickness+0.1 );  // mount hole
+        translate([ 0, 0, -0.1 ]) translate([ 0, -8, 0 ]) cylinder( r=(8 / 2), h=body_wall_thickness+0.2 );  // the shaft hole
+        translate([ 0, 0, -0.1 ]) translate([ -(35/2), 0, 0 ]) cylinder( r=(screwhole_radius_M30_passthru), h=body_wall_thickness+0.2 );  // mount hole
+        translate([ 0, 0, -0.1 ]) translate([ +(35/2), 0, 0 ]) cylinder( r=(screwhole_radius_M30_passthru), h=body_wall_thickness+0.2 );  // mount hole
         translate([ 0, 0, body_wall_thickness ]) cylinder( r=(30 / 2), h=20);    // might make dent in bottom for main motor body
     }
     
@@ -1176,9 +1176,9 @@ module component_sparkfun_stepper_motor(mode="holes") {
     points = [ [25,4], [4,18], [-4,18], [-25,4], [-25,-4], [-4,-18], [4,-18], [25,-4] ]; 
     
     if (mode == "holes") {
-        translate([ 0, 0, 0 ]) cylinder( r=(12 / 2), h=body_wall_thickness+0.1 );  // the shaft hole
-        translate([ -(42/2), 0, 0 ]) cylinder( r=(screwhole_radius_M30_passthru), h=body_wall_thickness+0.1 );  // mount hole
-        translate([ +(42/2), 0, 0 ]) cylinder( r=(screwhole_radius_M30_passthru), h=body_wall_thickness+0.1 );  // mount hole
+        translate([ 0, 0, -0.1 ]) cylinder( r=(12 / 2), h=body_wall_thickness+0.2 );  // the shaft hole
+        translate([ -(42/2), 0, -0.1 ]) cylinder( r=(screwhole_radius_M30_passthru), h=body_wall_thickness+0.2 );  // mount hole
+        translate([ +(42/2), 0, -0.1 ]) cylinder( r=(screwhole_radius_M30_passthru), h=body_wall_thickness+0.2 );  // mount hole
         translate([ 0, 0, body_wall_thickness ]) cylinder( r=(37 / 2), h=18);    // might make dent in bottom for main motor body     
         translate([ 0, 0, body_wall_thickness ]) linear_extrude(height=8) polygon( points ); // might make dent in bottom for flat plate
     }
@@ -1217,11 +1217,9 @@ module component_n20_motor(mode="holes") {
     // this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
     
     if (mode == "holes") {
-        translate([ 0, 0, 0 ]) cylinder( r=(4 / 2), h=body_wall_thickness+0.1 );  // the shaft hole
+        translate([ 0, 0, -0.1 ]) translate([ 0, 0, 0 ]) cylinder( r=(4 / 2), h=body_wall_thickness+0.2 );  // the shaft hole
         translate([ 0, 0, (body_wall_thickness-1) ]) cylinder( r=(5 / 2), h=1.2 );  // the bearing hole
-        roundedbox(12, 2.3, 1, (body_wall_thickness+0.1));    // slot for mounting screws (prints better than 2 teeny holes
-        //translate([ -(9/2), 0, 0 ]) cylinder( r=(screwhole_radius_M25_passthru), h=body_wall_thickness+0.1 );  // mount hole
-        //translate([ +(9/2), 0, 0 ]) cylinder( r=(screwhole_radius_M25_passthru), h=body_wall_thickness+0.1 );  // mount hole        
+        translate([ 0, 0, -0.1 ])roundedbox(12, 2.3, 1, (body_wall_thickness+0.2));    // slot for mounting screws (prints better than 2 teeny holes     
         translate([ 0, 0, body_wall_thickness ]) roundedbox(14, 12, 1, 32);    // maybe dig a clearance ditch in box bottom if motor is low
     }
     
@@ -2109,3 +2107,26 @@ module component_adafruit_miniboost(mode="adds") {
 }
 
 
+/*
+ * ***************************************************************************
+ * this makes a rectangular port in lid for passing wires from inside of box
+ * to outside of box
+ *
+ * this is generated in xy plane, centered at origin, box outside skin is at 
+ * z=0 (moving "into" box has +z) it is generated in "landscape" shape
+ * (as it would be on a box side)
+ * ***************************************************************************
+ */
+
+module component_lid_wire_port(mode="holes") {    
+    if (mode == "holes") {
+        roundedbox(25, 7, 2, lid_thickness+0.2);
+    }  
+
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) {
+            translate([ 0, 0, lid_thickness ]) color ([ 0.9, 0.9, 0.9 ]) roundedbox(25, 7, 2, 1);
+        }
+    }
+}
