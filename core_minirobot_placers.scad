@@ -22,6 +22,12 @@
  * Author(s): Don Korte
  *
  * github: https://github.com/dnkorte/minirobot_chassis.git
+ *
+ * NOTE this tool attempts to place components in orientations/distances 
+ *  to minimize internal collisions.  not all possible combinations of
+ *  parts and box size are compatible.  before printing or committing to
+ *  a particular BOM or layout, use the "visualization" tools to
+ *  check for collisions with your particular configuration 
  *  
  * MIT License
  * 
@@ -49,57 +55,111 @@
 
 /*
  * ***************************************************************************
- * this module arranges power components (batteries, boost converters, power
+ * these  modules arrange power components (batteries, boost converters, power
  * distribution strip) on bottom of lid; note these are specified by "package"
  * ***************************************************************************
  */
 
-module place_power_components(mode="holes") {
-    // for now this is fake - it just puts one demo configuration
+module place_battery(mode="holes") {  
 
-    // holes
+    // TODO: needs to adjust height of cylinder to accomodate max height allowed (per box height)
 
-    // adds
-    if ((power_package == 10) && (part == "lid")) {
+    wall_standoff = body_wall_thickness + lid_lip_thickness + ((batt_lipo_cyl_dia + (2*battbox_wall_thickness))/2);
 
-        // (simplified) box for 1200 mAH LiPo (34 x 62 x 5mm)  note really skinny boxes would need to use 500 mAH
-        translate([ 0, 0, lid_thickness]) 
-            color([ 1,0,0 ]) 
-            roundedbox( 38, 66, 2, 7);
-
-        // (simplified) Power Distribution Stripboard (50 x 13mm) raised 3mm
-        translate([ (38/2)+(13/2)+1, ((box_width/2) - (50/2) - (body_wall_thickness + lid_lip_thickness) -2 ), lid_thickness]) union() {
-            color([ 1,0,0 ]) roundedbox( 13, 50, 2, 4);
-            translate([ 0, 0, 5 ]) color([ 0.8, 0.8, 0.8 ]) roundedbox( 11, 48, 1, 8);
-        }
-
-        // (simplified) adafruit miniboost 5v (11 x 17 x 6mm) raised 3mm (showing portrait for wide boxes)
-        translate([ (38/2)+(11/2)+1, -((box_width/2) - (17/2) - (body_wall_thickness + lid_lip_thickness) -2 ), lid_thickness]) 
-            color([ 1,0,0 ]) 
-            roundedbox( 11, 17, 1, 6+3);
-
-        // (simplified) adafruit miniboost 5v (11 x 17 x 6mm) raised 3mm (showing landscape for skinny boxes)
-        translate([ (38/2)+(17/2)+1, -((box_width/2) - (11/2) - (body_wall_thickness + lid_lip_thickness) -2 ), lid_thickness]) 
-            color([ 1,1,0 ]) 
-            roundedbox( 17, 11, 1, 6+3);
-
-        // (simplified) amazon adjustable boost (22 x 44 x 13mm) raised 3mm (showing portrait for long boxes)
-        translate([ -(38/2)-(22/2)-1, ((box_width/2) - (44/2) - (body_wall_thickness + lid_lip_thickness) -2 ), lid_thickness]) 
-            color([ 1,0,0 ]) 
-            roundedbox( 22, 44, 1, 13+3);
-
-        // (simplified) amazon adjustable boost (22 x 44 x 13mm) raised 3mm (showing landscape on "top" of batt lid for short boxes)
-        translate([ (38/2)-(44/2), 0, lid_thickness + 7]) 
-            rotate ([ 0, 0, 90 ])
-            color([ 1,1,0 ]) 
-            roundedbox( 22, 44, 1, 13+3);
-
-        // note for short boxes the front arcade button will need to be lowered
+    if ((battery == "2200 mAH Cylindrical Front Right") && (part == "lid")) {
+        translate([ lid_front_x - wall_standoff, (box_width/2) - wall_standoff, 0 ]) component_battbox_lipo_cylinder(mode);
     }
 
-    // lidcheck
-    
+    if ((battery == "2200 mAH Cylindrical Front Center") && (part == "lid")) {
+        translate([ lid_front_x - wall_standoff -3.5, 0, 0 ]) component_battbox_lipo_cylinder(mode);
+    }
+
+        
+    /* visualization for lidcheck */   
+
+    if ((battery == "2200 mAH Cylindrical Front Right") && (part == "box")) {
+        translate([ box_front_x + wall_standoff, (box_width/2) - wall_standoff, height_of_box ]) rotate([ 0, 180, 0 ]) component_battbox_lipo_cylinder("lidcheck");
+    }
+         
+    if ((battery == "2200 mAH Cylindrical Front Center") && (part == "box")) {
+        translate([ box_front_x + wall_standoff + 3.5, 0, height_of_box ]) rotate([ 0, 180, 0 ]) component_battbox_lipo_cylinder("lidcheck");
+    }
+
 }
+
+module place_power_distribution(mode="holes") {
+
+    if ((power_distribution_buss == "Long Way") && (part == "lid")) {
+        translate([ 0, 0, lid_thickness ]) component_schmart();
+    }
+
+    if ((power_distribution_buss == "Long Way Set Back") && (part == "lid")) {
+        translate([ -11, 0, lid_thickness ]) component_schmart();
+    }
+
+    if ((power_distribution_buss == "Wide Way") && (part == "lid")) {
+        translate([ (lid_front_x - 37), 0, lid_thickness ]) rotate([ 0, 0, 90 ]) component_schmart();
+    }
+
+
+    // TODO: still needs lidcheck
+}
+
+
+module place_boost_buck(mode="holes") {
+    wall_standoff = body_wall_thickness + lid_lip_thickness;
+
+    if ((boost_converter_for_motors == "Front Adjustable") && (part == "lid")) {
+        translate([ (lid_front_x - wall_standoff -14), -((box_width/2) - wall_standoff -23), lid_thickness ]) rotate([ 0, 0, 90 ]) component_amazon_boost();
+    }
+
+    if ((boost_converter_for_motors == "Side Adjustable") && (part == "lid")) {
+        translate([ (lid_front_x - wall_standoff -26), -((box_width/2) - wall_standoff - 13), lid_thickness ]) component_amazon_boost();
+    }
+
+    if ((boost_converter_for_motors == "Front Pololu") && (part == "lid")) {
+        translate([ (lid_front_x - wall_standoff - 14), -((box_width/2) - wall_standoff -23), lid_thickness ]) rotate([ 0, 0, 90 ]) component_pololu_boost();
+    }
+
+    if ((boost_converter_for_motors == "Side Pololu") && (part == "lid")) {
+        translate([ (lid_front_x - wall_standoff - 24 ), -((box_width/2) - wall_standoff - 13), lid_thickness ]) component_pololu_boost();
+    }
+
+
+    if (power_distribution_buss == "Wide Way") {
+
+        if ((want_3v_buck) && (part == "lid")) {
+            translate([ (lid_front_x - 54), -6, lid_thickness ]) component_adafruit_minibuck();
+        }
+
+        if ((want_5v_boost) && (part == "lid")) {
+            translate([ (lid_front_x - 54), 6, lid_thickness ]) component_adafruit_miniboost();
+        }
+
+    } else {
+
+        if ((want_3v_buck) && (part == "lid")) {
+            translate([ 0, -13, lid_thickness ]) component_adafruit_minibuck();
+        }
+
+            if ((want_5v_boost) && (part == "lid")) {
+                translate([ 0, 13, lid_thickness ]) component_adafruit_miniboost();
+            }
+
+
+            if ((want_5v_boost) && (part == "lid")) {
+                translate([ 0, 13, lid_thickness ]) component_adafruit_miniboost();
+            }
+    }
+
+
+
+
+    // TODO: still needs lidcheck
+}
+
+
+
 
 
 /*
@@ -113,74 +173,199 @@ module place_box_bottom_combo() {
         translate([ +18, 0, body_bottom_thickness]) component_tb6612();
     }
     
-    if ((box_bottom_PCB == "TB6612 and Mint") && (part == "box")) {
+    if ((box_bottom_PCB == "TB6612 and Small-Mint") && (part == "box")) {
         translate([ -28, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_tb6612();
         // tb6612 is 30mm and permaproto mint is 54mm
-        translate([ +12, 0, body_bottom_thickness]) component_small_smallmint_protoboard();
+        translate([ +12, 0, body_bottom_thickness]) component_smallmint_protoboard();
     }    
     
-    if ((box_bottom_PCB == "Dual TB6612 and Mint") && (part == "box")) {
-        translate([ -30, 12, body_bottom_thickness]) rotate([ 0, 0, 180 ]) component_tb6612();
-        translate([ -30, -12, body_bottom_thickness]) rotate([ 0, 0, 180 ]) component_tb6612();
+    if ((box_bottom_PCB == "Dual TB6612 and Small-Mint") && (part == "box")) {
+        translate([ -30, 3, body_bottom_thickness]) rotate([ 0, 0, 180 ]) component_tb6612();
+        translate([ -30, -18, body_bottom_thickness]) rotate([ 0, 0, 180 ]) component_tb6612();
         // tb6612 is 30mm and permaproto mint is 54mm
-        translate([ +12, 0, body_bottom_thickness]) component_small_smallmint_protoboard();
+        translate([ +12, 0, body_bottom_thickness]) component_smallmint_protoboard_lifted(board_raise_amount);
     }
     
     if ((box_bottom_PCB == "TB6612 and Feather") && (part == "box")) {
         translate([ -28, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_tb6612();
         // tb6612 is 30mm feather is 52mm
-        translate([ +12, 0, body_bottom_thickness]) component_feather();
+        translate([ +12, 0, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
     }   
     
     if ((box_bottom_PCB == "Dual TB6612 and Feather") && (part == "box")) {
-        translate([ -30, 12, body_bottom_thickness]) rotate([ 0, 0, 180 ]) component_tb6612();
-        translate([ -30, -12, body_bottom_thickness]) rotate([ 0, 0, 180 ]) component_tb6612();
+        translate([ -30, 3, body_bottom_thickness]) rotate([ 0, 0, 180 ]) component_tb6612();
+        translate([ -30, -18, body_bottom_thickness]) rotate([ 0, 0, 180 ]) component_tb6612();
         // tb6612 is 30mm and feather is 52mm
-        translate([ +12, 0, body_bottom_thickness]) component_feather();
+        translate([ +12, 0, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
     }
+
+
+//QWIIC I2C Motor Driver
+//QWIIC I2C Motor Driver + Small-Mint
+//QWIIC I2C Motor Driver + Feather
+
+    
+    if ((box_bottom_PCB == "QWIIC I2C Motor Driver + Small-Mint") && (part == "box")) {
+        translate([ -28, -5, body_bottom_thickness]) rotate([ 0, 0, -90 ]) rotate([ 0, 0, 90 ]) component_qwiic_motor_driver();
+        // qwiic driver is 25mm square and permaproto mint is 54mm
+        if (box_length > 90) {
+            translate([ +17, 0, body_bottom_thickness]) component_smallmint_protoboard_lifted(board_raise_amount);
+        } else {
+            translate([ +14, 0, body_bottom_thickness]) component_smallmint_protoboard_lifted(board_raise_amount);
+        }
+    }
+
+    if ((box_bottom_PCB == "QWIIC I2C Motor Driver + Feather") && (part == "box")) {
+        translate([ -27, -5, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_qwiic_motor_driver();
+        // qwiic driver is 25mm square and feather is 52mm
+        if (box_length > 90) {
+            translate([ (box_back_x - 32), 0, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
+        } else {
+            translate([ +14, 0, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
+        }
+    }  
+
+
+
         
-    if ((box_bottom_PCB == "L298 and Mint") && (part == "box")) {
-        translate([ -19, 0, body_bottom_thickness]) component_L298motor_driver();
+    if ((box_bottom_PCB == "L298 and Small-Mint") && (part == "box")) {
+        //translate([ -19, 0, body_bottom_thickness]) component_L298motor_driver();
+        translate([ (box_front_x+28), 0, body_bottom_thickness ]) component_L298motor_driver();
         // L298 is 47x47mm and permaproto mint is 54 x 25mm
-        translate([ +22, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_smallmint_protoboard();
+        if (box_length > 110) {
+            translate([ +22, 0, body_bottom_thickness]) component_smallmint_protoboard_lifted(board_raise_amount);
+        } else {     
+            translate([ +22, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard_lifted(board_raise_amount);
+        }
     }
         
     if ((box_bottom_PCB == "L298 and Feather") && (part == "box")) {
-        translate([ -19, 0, body_bottom_thickness]) component_L298motor_driver();
+        translate([ (box_front_x+28), 0, body_bottom_thickness]) component_L298motor_driver();
         // L298 is 47x47mm and feather is 52 x 25mm
-        translate([ +25, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_feather();
+        translate([ +25, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_feather_lifted(board_raise_amount);
     }
     
     if ((box_bottom_PCB == "Dual Geared Stepper Driver") && (part == "box")) {
         // board is 35mm x 32mm
         translate([ -19, 0, body_bottom_thickness]) component_gearedstepper_driver();
         translate([ +19, 0, body_bottom_thickness]) component_gearedstepper_driver();
-    }
+    } 
+    
+    if ((box_bottom_PCB == "Dual Geared Stepper Driver and Small-Mint") && (part == "box")) {
+        // board is 35mm x 32mm
+        translate([ (box_front_x + body_wall_thickness + 19), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard_lifted(board_raise_amount); 
+        translate([ (box_back_x-39), -5, body_bottom_thickness]) component_gearedstepper_driver_upper();
+        translate([ (box_back_x-24), +5, body_bottom_thickness]) rotate([ 0, 0, 180 ])component_gearedstepper_driver();
+    } 
+    
+    if ((box_bottom_PCB == "Dual Geared Stepper Driver and Feather") && (part == "box")) {
+        translate([ (box_front_x + body_wall_thickness + 14), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_feather(); 
+        translate([ (box_back_x-47), -5, body_bottom_thickness]) component_gearedstepper_driver_upper();
+        translate([ (box_back_x-32), +5, body_bottom_thickness]) rotate([ 0, 0, 180 ])component_gearedstepper_driver();
+    } 
     
     if ((box_bottom_PCB == "Dual Sparkfun EasyDriver") && (part == "box")) {
         // board is 48mm x 24mm
         translate([ 0, 12.5, body_bottom_thickness]) component_easydriver();
         translate([ 0, -12.5, body_bottom_thickness]) component_easydriver();
     }
+
+    if ((box_bottom_PCB == "Dual Sparkfun EasyDriver + Feather") && (part == "box")) {
+        translate([ (box_front_x + body_wall_thickness + 14), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_feather(); 
+        translate([ 6, 12.5, body_bottom_thickness]) component_easydriver();
+        translate([ 6, -12.5, body_bottom_thickness]) component_easydriver();
+    }
+
+    if ((box_bottom_PCB == "Dual Sparkfun EasyDriver + Small-Mint") && (part == "box")) {
+        translate([ (box_front_x + body_wall_thickness + 20), -((box_width/2)-31), body_bottom_thickness]) 
+            rotate([ 0, 0, 90 ]) component_smallmint_protoboard_lifted(board_raise_amount); 
+        //translate([ (box_back_x + body_wall_thickness -24), 0, body_bottom_thickness]) 
+        //    rotate([ 0, 0, -90 ]) component_smallmint_protoboard_lifted(board_raise_amount); 
+        translate([ 15, 12.5, body_bottom_thickness]) component_easydriver();
+        translate([ 15, -12.5, body_bottom_thickness]) component_easydriver();
+    }
     
     if ((box_bottom_PCB == "Dual Small-Mint") && (part == "box")) {
-        // permaproto mint is 54mm x 33mm
-        translate([ -17, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_smallmint_protoboard();
-        translate([ +17, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_smallmint_protoboard();
-    }    
-    
+        translate([ -17, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard_lifted(board_raise_amount);
+        translate([ +17, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard_lifted(board_raise_amount);
+    }   
+            
+    if ((box_bottom_PCB == "3 Small-Mint Inline") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ -34, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+        translate([ 0, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+        translate([ +34, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+    }
+
     if ((box_bottom_PCB == "Dual Red Tindie") && (part == "box")) {
         // small_red_protoboard is 52mm x 28mm
-        translate([ -14, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
-        translate([ +14, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
+        translate([ -6, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) rotate([ 0, 0, 180 ]) component_small_red_protoboard_lifted(board_raise_amount);
+        translate([ +22, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard_lifted(board_raise_amount);
     }  
     
     if ((box_bottom_PCB == "Triple Red Tindie") && (part == "box")) {
         // small_red_protoboard is 52mm x 28mm
-        translate([ -28, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
-        translate([ 0, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
-        translate([ +28, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
+        translate([ -28, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard_lifted(board_raise_amount);
+        translate([ 0, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard_lifted(board_raise_amount);
+        translate([ +28, 0, body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard_lifted(board_raise_amount);
     }
+
+
+    if ((box_bottom_PCB == "F/B Small-Mint + Raised Ctr Small-Mint") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ (box_front_x + body_wall_thickness + 19), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+        translate([ 0, 7, body_bottom_thickness]) component_smallmint_protoboard_lifted(board_raise_amount);
+        translate([ (box_back_x - body_wall_thickness - 19), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+    }
+
+    if ((box_bottom_PCB == "Front Small-Mint + Raised Ctr Small-Mint") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ (box_front_x + body_wall_thickness + 19), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+        translate([ 5, 7, body_bottom_thickness]) component_smallmint_protoboard_lifted(board_raise_amount);
+    }
+
+    if ((box_bottom_PCB == "F/B Red Tindie + Raised Ctr Red Tindie") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ (box_front_x + body_wall_thickness + 18), -((box_width/2)-28), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
+        translate([ 0, 4, body_bottom_thickness]) component_small_red_protoboard_lifted(board_raise_amount);
+        translate([ (box_back_x - body_wall_thickness - 16), -((box_width/2)-28), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
+    }
+
+    if ((box_bottom_PCB == "Front Red Tindie + Raised Ctr Red Tindie") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ (box_front_x + body_wall_thickness + 18), -((box_width/2)-28), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
+        translate([ 5, 4, body_bottom_thickness]) component_small_red_protoboard_lifted(board_raise_amount);
+    }
+
+
+
+
+    if ((box_bottom_PCB == "F/B Small-Mint + Raised Ctr Feather") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ (box_front_x + body_wall_thickness + 19), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+        translate([ 0, 7, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
+        translate([ (box_back_x - body_wall_thickness - 19), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+    }
+
+    if ((box_bottom_PCB == "Front Small-Mint + Raised Ctr Feather") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ (box_front_x + body_wall_thickness + 19), -((box_width/2)-31), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_smallmint_protoboard();
+        translate([ 5, 7, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
+    }
+
+    if ((box_bottom_PCB == "F/B Red Tindie + Raised Ctr Feather") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ (box_front_x + body_wall_thickness + 18), -((box_width/2)-28), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
+        translate([ 0, 4, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
+        translate([ (box_back_x - body_wall_thickness - 16), -((box_width/2)-28), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
+    }
+
+    if ((box_bottom_PCB == "Front Red Tindie + Raised Ctr Feather") && (part == "box")) {
+        // small_red_protoboard is 52mm x 28mm
+        translate([ (box_front_x + body_wall_thickness + 18), -((box_width/2)-28), body_bottom_thickness]) rotate([ 0, 0, -90 ]) component_small_red_protoboard();
+        translate([ 5, 4, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
+    }
+    
 }
 
 /*
@@ -200,7 +385,7 @@ module place_box_bottom_combo() {
 module place_red_protoboard() {
     
     if ((box_bottom_PCB == "Red Tindie Proto") && (part == "box")) {
-        translate([ 0, 0, body_bottom_thickness]) component_small_red_protoboard();
+        translate([ 9, 0, body_bottom_thickness]) component_small_red_protoboard_lifted(board_raise_amount);
     }
 }
 
@@ -221,7 +406,7 @@ module place_red_protoboard() {
 module place_smallmint_protoboard() {
     
     if ((box_bottom_PCB == "PermaProto Small-Mint") && (part == "box")) {
-        translate([ 0, 0, body_bottom_thickness]) component_small_smallmint_protoboard();
+        translate([ 9, 0, body_bottom_thickness]) component_smallmint_protoboard_lifted(board_raise_amount);
     }
 }
 
@@ -267,7 +452,7 @@ module place_permaprotohalf() {
 module place_feather() {
     
     if ((box_bottom_PCB == "Feather") && (part == "box")) {
-        translate([ 0, 0, body_bottom_thickness]) component_feather();
+        translate([ 0, 0, body_bottom_thickness]) component_feather_lifted(board_raise_amount);
     }
 }
 
@@ -419,11 +604,15 @@ module place_mini_toggle_switch(mode="holes") {
     keep_away_distance = 14 / 2;
     
     if ((has_toggle_back_ctr) && (part == "box") && (has_arcade_back)) {
-        translate([ box_back_x,  0, (height_of_box - lid_lip_height - keep_away_distance - 36)]) rotate([ 0, -90, 0]) component_mini_toggle_switch(mode);
+        //translate([ box_back_x,  0, (height_of_box - lid_lip_height - keep_away_distance - 44)]) rotate([ 0, -90, 0]) component_mini_toggle_switch(mode);
+        translate([ box_back_x,  0, 12]) rotate([ 0, -90, 0]) component_mini_toggle_switch(mode);
+        if (height_of_box < 70) {
+            echo("<span style='background-color:red'>NOTICE: There isn't room for an arcade button AND a center toggle switch in this short box.  You should either eliminate the back arcade button or use a toggle in one of the back side positions</span>");
+        }
     }
     
     if ((has_toggle_back_ctr) && (part == "box") && (!has_arcade_back)) {
-        translate([ box_back_x,  0, (height_of_box - lid_lip_height - 10)]) rotate([ 0, -90, 0]) component_mini_toggle_switch(mode);
+        translate([ box_back_x,  0, (height_of_box - lid_lip_height - 20)]) rotate([ 0, -90, 0]) component_mini_toggle_switch(mode);
     }
         
     if ((has_toggle_back_left) && (part == "box")) {
@@ -474,19 +663,19 @@ module place_pushbuttons(mode="holes") {
     } 
         
     if ((has_button_lid_left) && (part == "lid")) {
-        translate([ lid_back_x + (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_L_y + (body_wall_thickness + box_corner_inner_radius + keep_away_distance), 0 ]) component_adafruit_illuminated_pushbutton(mode);
+        translate([ lid_back_x + (body_wall_thickness + keep_away_distance + 5),  box_L_y + (body_wall_thickness + keep_away_distance + 5), 0 ]) component_adafruit_illuminated_pushbutton(mode);
     }
         
     if ((has_button_lid_right) && (part == "lid")) {
-        translate([ lid_back_x + (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_R_y - (body_wall_thickness + box_corner_inner_radius + keep_away_distance), 0 ]) component_adafruit_illuminated_pushbutton(mode); 
+        translate([ lid_back_x + (body_wall_thickness + keep_away_distance + 5),  box_R_y - (body_wall_thickness + keep_away_distance + 5), 0 ]) component_adafruit_illuminated_pushbutton(mode); 
     } 
      
  /* this is an experiment */   
     if ((has_button_lid_right) && (part == "box")) {
-        translate([ box_back_x - (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_R_y - (body_wall_thickness + box_corner_inner_radius + keep_away_distance), height_of_box + lid_thickness ]) rotate([ 0, 180, 0 ]) component_adafruit_illuminated_pushbutton("lidcheck"); 
+        translate([ box_back_x - (body_wall_thickness +  keep_away_distance + 5),  box_R_y - (body_wall_thickness + keep_away_distance + 5), height_of_box + lid_thickness ]) rotate([ 0, 180, 0 ]) component_adafruit_illuminated_pushbutton("lidcheck"); 
     }   
     if ((has_button_lid_left) && (part == "box")) {
-        translate([ box_back_x - (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_L_y + (body_wall_thickness + box_corner_inner_radius + keep_away_distance), height_of_box + lid_thickness ]) rotate([ 0, 180, 0 ]) component_adafruit_illuminated_pushbutton("lidcheck"); 
+        translate([ box_back_x - (body_wall_thickness + keep_away_distance + 5),  box_L_y + (body_wall_thickness + keep_away_distance + 5), height_of_box + lid_thickness ]) rotate([ 0, 180, 0 ]) component_adafruit_illuminated_pushbutton("lidcheck"); 
     } 
  /* end of experiment */
 }
@@ -504,15 +693,23 @@ module place_arcade_buttons(mode="holes") {
     keep_away_distance = 36 / 2;
     
     if ( (has_arcade_back) && (part == "box")) {
-        translate([ (box_length)/2,  0, (height_of_box - lid_lip_height - keep_away_distance) ]) 
-            rotate([ 0, -90, 0]) 
-            component_arcade_button(mode);
+        // if box is tall enough we lower the button enouth to clear power components on lid
+        // for boxes that are less than 70mm high we put button closer to top 
+
+        if (height_of_box < 70) {
+            translate([ (box_length)/2,  0, (height_of_box - lid_lip_height - keep_away_distance) ]) 
+                rotate([ 0, -90, 0]) 
+                component_arcade_button(mode);
+        } else {
+            translate([ (box_length)/2,  0, (height_of_box - lid_lip_height - keep_away_distance - 11) ]) 
+                rotate([ 0, -90, 0]) 
+                component_arcade_button(mode);
+        }
     }
         
     if ( (has_arcade_front) && (part == "box")) {
-        // if box is tall enough we lower the button enouth to clear power power distribution strip
-        // for boxes that are less than 70mm high we put button closer to top and user would need
-        // to not install the power distribution board
+        // if box is tall enough we lower the button enouth to clear power components on lid
+        // for boxes that are less than 70mm high we put button closer to top 
 
         if (height_of_box < 70) {
             translate([ -(box_length)/2, 0, (height_of_box - lid_lip_height - keep_away_distance) ]) 
@@ -638,6 +835,7 @@ module place_n20_motor(mode="holes") {
 module place_TT_motor(mode="holes") {
     // note 0=shaft same height as motor center; positive=shaft is BELOW motor center
     motor_center_to_shaft_z = 0;
+    shaft_to_longend = 58;
     
     motor_lift = shaft_height_above_box_bottom + motor_center_to_shaft_z;
     if (motor_lift < 10) {
@@ -645,14 +843,29 @@ module place_TT_motor(mode="holes") {
     }        
     
     if ( (motor_type == "Blue TT Horizontal") && (part == "box")) {
-        // right-side motor
-        translate([ 0,  (box_width)/2 - body_wall_thickness, motor_lift ]) 
-            rotate([ 90, 0, 0]) 
-            component_TT_blue_motor(mode);
-        // left-side motor
-        translate([ 0,  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
-            rotate([ -90, 0, 0]) 
-            component_TT_blue_motor(mode);
+
+        if (((shaft_to_longend+body_wall_thickness) < (box_back_x)) || allow_motors_to_extend_out_back_of_box) {
+            // motor is short enough to fit inside (horizontally) so its centered in box
+            // right-side motor
+            translate([ 0,  (box_width)/2 - body_wall_thickness, motor_lift ]) 
+                rotate([ 90, 0, 0]) 
+                component_TT_blue_motor(mode);
+            // left-side motor
+            translate([ 0,  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
+                rotate([ -90, 0, 0]) 
+                component_TT_blue_motor(mode);
+        } else {
+            // motor is too long to fit inside so move it forward
+            echo("<span style='background-color:yellow'>NOTICE: motor too long to fit in body if centered, so moved it forward ", (shaft_to_longend - box_back_x + body_wall_thickness), " mm</span>");
+            // right-side motor
+            translate([ -((shaft_to_longend - box_back_x + body_wall_thickness)),  (box_width)/2 - body_wall_thickness, motor_lift ]) 
+                rotate([ 90, 0, 0]) 
+                component_TT_blue_motor(mode);
+            // left-side motor
+            translate([ -((shaft_to_longend - box_back_x + body_wall_thickness)),  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
+                rotate([ -90, 0, 0]) 
+                component_TT_blue_motor(mode);
+        }
     }     
     
     if ( (motor_type == "Blue TT Vertical") && (part == "box")) {
@@ -667,14 +880,29 @@ module place_TT_motor(mode="holes") {
     }      
     
     if ( (motor_type == "Yellow TT Horizontal") && (part == "box")) {
-        // right-side motor
-        translate([ 0,  (box_width)/2 - body_wall_thickness, motor_lift ]) 
-            rotate([ 90, 0, 0]) 
-            component_TT_yellow_motor(mode);
-        // left-side motor
-        translate([ 0,  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
-            rotate([ -90, 0, 0]) 
-            component_TT_yellow_motor(mode);
+
+        if (((shaft_to_longend+body_wall_thickness) < (box_back_x)) || allow_motors_to_extend_out_back_of_box) {
+            // motor is short enough to fit inside (horizontally) so its centered in box
+            // right-side motor
+            translate([ 0,  (box_width)/2 - body_wall_thickness, motor_lift ]) 
+                rotate([ 90, 0, 0]) 
+                component_TT_yellow_motor(mode);
+            // left-side motor
+            translate([ 0,  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
+                rotate([ -90, 0, 0]) 
+                component_TT_yellow_motor(mode);
+        } else {
+            // motor is too long to fit inside so move it forward
+            echo("<span style='background-color:yellow'>NOTICE: motor too long to fit in body if centered, so moved it forward ", (shaft_to_longend - box_back_x + body_wall_thickness), " mm</span>");
+            // right-side motor
+            translate([ -((shaft_to_longend - box_back_x + body_wall_thickness)),  (box_width)/2 - body_wall_thickness, motor_lift ]) 
+                rotate([ 90, 0, 0]) 
+                component_TT_yellow_motor(mode);
+            // left-side motor
+            translate([ -((shaft_to_longend - box_back_x + body_wall_thickness)),  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
+                rotate([ -90, 0, 0]) 
+                component_TT_yellow_motor(mode);
+        }
     }     
     
     if ( (motor_type == "Yellow TT Vertical") && (part == "box")) {
@@ -690,14 +918,29 @@ module place_TT_motor(mode="holes") {
       
     
     if ( (motor_type == "DFR TT with Encoder H") && (part == "box")) {
-        // right-side motor
-        translate([ 0,  (box_width)/2 - body_wall_thickness, motor_lift ]) 
-            rotate([ 90, 0, 0]) 
-            component_TT_DFR_motor(mode);
-        // left-side motor
-        translate([ 0,  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
-            rotate([ -90, 0, 0]) 
-            component_TT_DFR_motor(mode);
+
+        if (((shaft_to_longend+body_wall_thickness) < (box_back_x)) || allow_motors_to_extend_out_back_of_box) {
+            // motor is short enough to fit inside (horizontally) so its centered in box
+            // right-side motor
+            translate([ 0,  (box_width)/2 - body_wall_thickness, motor_lift ]) 
+                rotate([ 90, 0, 0]) 
+                component_TT_DFR_motor(mode);
+            // left-side motor
+            translate([ 0,  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
+                rotate([ -90, 0, 0]) 
+                component_TT_DFR_motor(mode);
+        } else {
+            // motor is too long to fit inside so move it forward
+            echo("<span style='background-color:yellow'>NOTICE: motor too long to fit in body if centered, so moved it forward ", (shaft_to_longend - box_back_x + body_wall_thickness), " mm</span>");
+            // right-side motor
+            translate([ -((shaft_to_longend - box_back_x + body_wall_thickness)),  (box_width)/2 - body_wall_thickness, motor_lift ]) 
+                rotate([ 90, 0, 0]) 
+                component_TT_DFR_motor(mode);
+            // left-side motor
+            translate([ -((shaft_to_longend - box_back_x + body_wall_thickness)),  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
+                rotate([ -90, 0, 0]) 
+                component_TT_DFR_motor(mode);
+        }
     }     
     
     if ( (motor_type == "DFR TT with Encoder V") && (part == "box")) {
@@ -725,22 +968,38 @@ module place_TT_motor(mode="holes") {
 module place_pololu_miniplastic_motor(mode="holes") {
     // note 0=shaft same height as motor center; positive=shaft is BELOW motor center
     motor_center_to_shaft_z = 0;
+    shaft_to_longend = 53;
     
     motor_lift = shaft_height_above_box_bottom + motor_center_to_shaft_z;
     if (motor_lift < 10) {
         echo("<span style='background-color:red'>NOTICE: wheels too small; use shorter caster or wheels with bigger diameter</span>");
-    }        
+    }   
     
     if ( (motor_type == "Pololu MiniPlastic Horizontal") && (part == "box")) {
-        // right-side motor
-        translate([ 0,  (box_width)/2 - body_wall_thickness, motor_lift ]) 
-            rotate([ 90, 0, 0]) 
-            component_pololu_miniplastic_motor(mode);
-        // left-side motor
-        translate([ 0,  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
-            rotate([ -90, 0, 0]) 
-            component_pololu_miniplastic_motor(mode);
-    }     
+        if (((shaft_to_longend+body_wall_thickness) < (box_back_x)) || allow_motors_to_extend_out_back_of_box) {
+            // motor is short enough to fit inside (horizontally) so its centered in box
+            // right-side motor
+            translate([ 0,  (box_width)/2 - body_wall_thickness, motor_lift ]) 
+                rotate([ 90, 0, 0]) 
+                component_pololu_miniplastic_motor(mode);
+            // left-side motor
+            translate([ 0,  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
+                rotate([ -90, 0, 0]) 
+                component_pololu_miniplastic_motor(mode);
+        } else {
+            // motor is too long to fit inside so move it forward and user allows it to be moved
+            echo("<span style='background-color:yellow'>NOTICE: motor too long to fit in body if centered, so moved it forward ", (shaft_to_longend - box_back_x + body_wall_thickness), " mm</span>");
+            // right-side motor
+            translate([ -((shaft_to_longend - box_back_x + body_wall_thickness)),  (box_width)/2 - body_wall_thickness, motor_lift ]) 
+                rotate([ 90, 0, 0]) 
+                component_pololu_miniplastic_motor(mode);
+            // left-side motor
+            translate([ -((shaft_to_longend - box_back_x + body_wall_thickness)),  -(box_width)/2 + body_wall_thickness, motor_lift ]) 
+                rotate([ -90, 0, 0]) 
+                component_pololu_miniplastic_motor(mode);
+        }
+
+    }    
     
     if ( (motor_type == "Pololu MiniPlastic Vertical") && (part == "box")) {
         // right-side motor

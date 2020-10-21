@@ -22,6 +22,12 @@
  * Author(s): Don Korte
  *
  * github: https://github.com/dnkorte/minirobot_chassis.git
+ *
+ * NOTE this tool attempts to place components in orientations/distances 
+ *  to minimize internal collisions.  not all possible combinations of
+ *  parts and box size are compatible.  before printing or committing to
+ *  a particular BOM or layout, use the "visualization" tools to
+ *  check for collisions with your particular configuration 
  *  
  * MIT License
  * 
@@ -110,8 +116,9 @@ module lip() {
 }
 
 // this makes a mount for a threaded insert M3 
-module TI30_mount(mount_height = TI30_default_height) {
-    
+// note that depending on user-set configuration these might be just self-tap holes
+
+module TI30_mount(mount_height = TI30_default_height) {    
     if (TI30_use_threaded_insert) {
         difference() {
             cylinder(r=((TI30_mount_diameter / 2) + 0.05), h=mount_height);
@@ -120,14 +127,15 @@ module TI30_mount(mount_height = TI30_default_height) {
     } else {
         difference() {
             cylinder(r=((TI30_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=screwhole_radius_M30_selftap, h=mount_height); 
+            cylinder(r=screwhole_radius_M30_selftap, h=mount_height+0.1); 
         }
     } 
 }
 
 // this makes a mount for a threaded insert M2 
-module TI20_mount(mount_height = TI20_default_height) {
-    
+// note that depending on user-set configuration these might be just self-tap holes
+
+module TI20_mount(mount_height = TI20_default_height) {    
     if (TI20_use_threaded_insert) {
         difference() {
             cylinder(r=((TI20_mount_diameter / 2) + 0.05), h=mount_height);
@@ -136,15 +144,16 @@ module TI20_mount(mount_height = TI20_default_height) {
     } else {
         difference() {
             cylinder(r=((TI20_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=screwhole_radius_M20_selftap, h=mount_height); 
+            cylinder(r=screwhole_radius_M20_selftap, h=mount_height+0.1); 
         }
     } 
 }
 
 
 // this makes a mount for a threaded insert M2.5 
-module TI25_mount(mount_height = TI25_default_height) {
-    
+// note that depending on user-set configuration these might be just self-tap holes
+
+module TI25_mount(mount_height = TI25_default_height) {    
     if (TI25_use_threaded_insert) {
         difference() {
             cylinder(r=((TI25_mount_diameter / 2) + 0.05), h=mount_height);
@@ -153,23 +162,144 @@ module TI25_mount(mount_height = TI25_default_height) {
     } else {
         difference() {
             cylinder(r=((TI25_mount_diameter / 2) + 0.05), h=mount_height);
-            cylinder(r=screwhole_radius_M25_selftap, h=mount_height); 
+            cylinder(r=screwhole_radius_M25_selftap, h=mount_height+0.1); 
         }
     } 
 }
 
 // this makes a smaller diameter support mount equiv to the above mounts but no screw 
 // the mount stud is 5mm in diameter (supports boards without bumping into bottom solder/etc)
+
 module support_stud(mount_height = TI30_default_height) {
     cylinder(r=(5 / 2), h=mount_height);
 }
 
+// this makes a smaller diameter mount that self-taps for M2.5 and is only 5mm tall 
+// this would work for a M2.5 screw 6mm long going through a PCB
+// it is ONLY made for self-tapping screw
+
+module M25_short_mount(mount_height = 5) {
+    difference() {
+        cylinder(r=((5 / 2) + 0.05), h=mount_height);
+        cylinder(r=screwhole_radius_M25_selftap, h=mount_height+0.1); 
+    }
+}
+
+/*
+ * ***************************************************************************
+ * module shaft_flat() makes a d-shaft makes a flattened shaft
+ * this is a round cylinder, with flats on 2 sides (ie for a TT motor)
+ *  
+ * this is generated in xy plane, centered at origin, pointed "up" (towards + Z)
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * parameters:
+ *      diameter    diameter of round part of shaft, in mm
+ *      flatwidth   dimension across flat part in mm (flat-to-flat)
+ *      length      length (or height) of shaft
+ *      orientation "tall" or "wide" 
+ *          (for tall, initial flats are on left/right (+/- x sides))
+ * ***************************************************************************
+ */
+module shaft_flat(diameter, flatwidth, length, orientation="tall") {
+    remove_from_each_side = (diameter - flatwidth) / 2;
+
+    if (orientation == "tall") {
+        difference() {
+            cylinder(r=(diameter/2), h=length);
+            translate([ -(diameter/2), -(diameter/2), -0.1 ]) 
+                cube([ remove_from_each_side, diameter, length+0.2 ]);
+            translate([ (diameter/2)-remove_from_each_side, -(diameter/2), -0.1 ]) 
+                cube([ remove_from_each_side, diameter, length+0.2 ]);
+        }
+    } else {
+        rotate([ 0, 0, -90 ]) difference() {
+            cylinder(r=(diameter/2), h=length);
+            translate([ -(diameter/2), -(diameter/2), -0.1 ]) 
+                cube([ remove_from_each_side, diameter, length+0.2 ]);
+            translate([ (diameter/2)-remove_from_each_side, -(diameter/2), -0.1 ]) 
+                cube([ remove_from_each_side, diameter, length+0.2 ]);
+        }
+    }
+}
+
+/*
+ * ***************************************************************************
+ * module shaft_d() makes a d-shaft
+ * this is a round cylinder, with flat on 1 side
+ *  
+ * this is generated in xy plane, centered at origin, pointed "up" (towards + Z)
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * parameters:
+ *      diameter        diameter of round part of shaft, in mm
+ *      fractionremoved  portion of diameter removed (ie 0.1 - 0.9)
+ *      length          length (or height) of shaft
+ *      orientation     "tall" or "wide" 
+ *          (for tall, initial flats are on left/right (+/- x sides))
+ * ***************************************************************************
+ */
+module shaft_d(diameter, fractionremoved, length, orientation="tall") {
+    remove_amount = (diameter * fractionremoved);
+
+    if (orientation == "tall") {
+        difference() {
+            cylinder(r=(diameter/2), h=length);
+            translate([ (diameter/2)-remove_amount, -(diameter/2), -0.1 ]) 
+                cube([ remove_amount, diameter, length+0.2 ]);
+        }
+    } else {
+        rotate([ 0, 0, -90 ]) difference() {
+            cylinder(r=(diameter/2), h=length);
+            translate([ (diameter/2)-remove_amount, -(diameter/2), -0.1 ])  
+                cube([ remove_amount, diameter, length+0.2 ]);
+        }
+    }
+}
+
+/*
+ * ***************************************************************************
+ * module shaft_d_r() makes a d-shaft
+ * this is a round cylinder, with flat on 1 side
+ *  
+ * this is generated in xy plane, centered at origin, pointed "up" (towards + Z)
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * parameters:
+ *      diameter        diameter of round part of shaft, in mm
+ *      flat_radius     radius to flat wall on cutoff side
+ *      length          length (or height) of shaft
+ *      orientation     "tall" or "wide" 
+ *          (for tall, initial flats are on left/right (+/- x sides))
+ * ***************************************************************************
+ */
+module shaft_d_r(diameter, flat_radius, length, orientation="tall") {
+    remove_amount = ((diameter/2) - flat_radius);
+
+    if (orientation == "tall") {
+        difference() {
+            cylinder(r=(diameter/2), h=length);
+            translate([ (diameter/2)-remove_amount, -(diameter/2), -0.1 ]) 
+                cube([ remove_amount, diameter, length+0.2 ]);
+        }
+    } else {
+        rotate([ 0, 0, -90 ]) difference() {
+            cylinder(r=(diameter/2), h=length);
+            translate([ (diameter/2)-remove_amount, -(diameter/2), -0.1 ])  
+                cube([ remove_amount, diameter, length+0.2 ]);
+        }
+    }
+}
 
 /*
  * ***************************************************************************
  * this makes a base for red tindie protoboard (small;  50 x 26mm)
  * its base is 1mm thick, and 52 x 28 mm
  * it has 4 M3 threaded insert mounts 43mm x 20.5mm spacing
+ * 
+ * the standard function uses 4 mount screws, lifted standard mount height
+ * the _lifted function uses 2 (long axis) mounts + one small support on 
+ *      other edge (no screws).  the whole assembly is lefted by "lift" mm
  *  
  * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
  * it is generated in "landscape" shape
@@ -178,6 +308,7 @@ module support_stud(mount_height = TI30_default_height) {
  * purchase: https://www.tindie.com/products/DrAzzy/1x2-prototyping-board/
  * ***************************************************************************
  */
+
 board_redproto_length = 52;
 board_redproto_width = 28;
 vis_redproto_length = 50;
@@ -205,11 +336,39 @@ module component_small_red_protoboard() {
     }
 }
 
+module component_small_red_protoboard_lifted(lift=17) {
+    if (lift < 8) {
+        component_small_red_protoboard();
+    } else {
+        roundedbox(board_redproto_length, board_redproto_width, 2, 1);
+        
+        translate([ -(board_redproto_screw_x/2), (board_redproto_screw_y/2), 1]) TI30_mount(lift); 
+        translate([ +(board_redproto_screw_x/2), (board_redproto_screw_y/2), 1]) TI30_mount(lift);
+
+        translate([ 0, -12, 1]) roundedbox(10, 3, 1, lift); 
+        
+        translate([0, 0, 0]) linear_extrude(2) text("Red Proto", 
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        translate([0, -8, 0]) linear_extrude(2) text("Proto M3",
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, 1 + lift ]) color([ 1, 0, 0 ]) 
+                roundedbox(vis_redproto_length, vis_redproto_width, 2, 1);
+        }
+    }
+}
+
 /*
  * ********************************************************************************
  * this makes a base for adafruit small mint tin size protoboard 
  * its base is 1mm thick, and 54 x 33 mm
  * it has 4 M3 threaded insert mounts 45.5mm x 25.4mm spacing
+ * 
+ * the standard function uses 4 mount screws, lifted standard mount height
+ * the _lifted function uses 2 (long axis) mounts + one small support on 
+ *      other edge (no screws).  the whole assembly is lefted by "lift" mm
  *  
  * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
  * it is generated in "landscape" shape
@@ -223,7 +382,7 @@ board_smallmintproto_width = 33;
 board_smallmintproto_screw_x = 45.5;
 board_smallmintproto_screw_y = 25.4;
 
-module component_small_smallmint_protoboard() {
+module component_smallmint_protoboard() {
     roundedbox(board_smallmintproto_length, board_smallmintproto_width, 2, 1);
     
     translate([ -(board_smallmintproto_screw_x/2), -(board_smallmintproto_screw_y/2), 1]) TI30_mount(); 
@@ -240,6 +399,30 @@ module component_small_smallmint_protoboard() {
     if (show_internal_parts_for_collision_check) {
         translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
             roundedbox(board_smallmintproto_length, board_smallmintproto_width, 2, 1);
+    }
+}
+
+module component_smallmint_protoboard_lifted(lift=17) {
+    if (lift < 8) {
+        component_smallmint_protoboard();
+    } else {
+        roundedbox(board_smallmintproto_length, board_smallmintproto_width, 2, 1);
+        
+        translate([ -(board_smallmintproto_screw_x/2), (board_smallmintproto_screw_y/2), 1]) TI30_mount(lift); 
+        translate([ +(board_smallmintproto_screw_x/2), (board_smallmintproto_screw_y/2), 1]) TI30_mount(lift);
+
+        translate([ 0, -15, 1]) roundedbox(10, 3, 1, lift); 
+        
+        translate([0, 0, 0]) linear_extrude(2) text("Small Mint", 
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        translate([0, -8, 0]) linear_extrude(2) text("Proto M3",
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, 1 + lift ]) color([ 1, 0, 0 ]) 
+                roundedbox(board_smallmintproto_length, board_smallmintproto_width, 2, 1);
+        }
     }
 }
 
@@ -325,8 +508,50 @@ module component_feather() {
     
     // visualizations for this device
     if (show_internal_parts_for_collision_check) {
-        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
-            roundedbox(vis_feather_length, vis_feather_width, 2, 1);
+        translate([ 0, 0, 1 + TI30_default_height ]) visualize_featherstack();
+    }
+}
+
+module visualize_featherstack() {
+        color([ 1, 0, 0 ]) 
+        roundedbox(vis_feather_length, vis_feather_width, 2, 1);
+
+    if (height_of_visualized_feathers == 2) {  
+        translate([ 0, 0, 11 ]) color([ 1, 0, 0 ]) roundedbox(vis_feather_length, vis_feather_width, 2, 1);
+        translate([ 0, +10, 1   ]) color([ 0.4, 0.4, 0.4 ]) roundedbox(vis_feather_length, 2, 1, 10); // header
+        translate([ 0, -10, 1   ]) color([ 0.4, 0.4, 0.4 ]) roundedbox(vis_feather_length, 2, 1, 10); // header
+    }
+    if (height_of_visualized_feathers == 3) {  
+        translate([ 0, 0, 11 ]) color([ 1, 0, 0 ]) roundedbox(vis_feather_length, vis_feather_width, 2, 1);
+        translate([ 0, +10, 1  ]) color([ 0.4, 0.4, 0.4 ]) roundedbox(vis_feather_length, 2, 1, 10); // header
+        translate([ 0, -10, 1 ]) color([ 0.4, 0.4, 0.4 ]) roundedbox(vis_feather_length, 2, 1, 10); // header
+
+        translate([ 0, 0, + 11 + 11]) color([ 1, 0, 0 ]) roundedbox(vis_feather_length, vis_feather_width, 2, 1);
+        translate([ 0, +10, 11 + 1 ]) color([ 0.4, 0.4, 0.4 ]) roundedbox(vis_feather_length, 2, 1, 10); // header
+        translate([ 0, -10, 11 + 1 ]) color([ 0.4, 0.4, 0.4 ]) roundedbox(vis_feather_length, 2, 1, 10); // header
+    }
+}
+
+module component_feather_lifted(lift=17) {
+    if (lift < 8) {
+        component_feather();
+    } else {
+        roundedbox(board_feather_length, board_feather_width, 2, 1);
+        
+        translate([ -(board_feather_screw_x/2), (board_feather_screw_y/2), 1]) TI30_mount(lift); 
+        translate([ +(board_feather_screw_x/2), (board_feather_screw_y/2), 1]) TI30_mount(lift);
+
+        translate([ 0, -10, 1]) roundedbox(10, 3, 1, lift); 
+        
+        translate([0, 1, 0]) linear_extrude(2) text("Feather", 
+            size=6, halign="center", font = "Liberation Sans:style=Bold");
+        translate([0, -8, 0]) linear_extrude(2) text("M2.5", 
+            size=6, halign="center", font = "Liberation Sans:style=Bold");
+        
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, 1 + lift ]) visualize_featherstack();
+        }
     }
 }
 
@@ -370,10 +595,8 @@ module component_feather_doubler() {
     
     // visualizations for this device
     if (show_internal_parts_for_collision_check) {
-        translate([ -12, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) rotate([ 0, 0, -90 ])
-            roundedbox(vis_feather_length, vis_feather_width, 2, 1);
-        translate([ 12, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) rotate([ 0, 0, -90 ])
-            roundedbox(vis_feather_length, vis_feather_width, 2, 1);
+        translate([ -12, 0, 1 + TI30_default_height ]) rotate([ 0, 0, -90 ]) visualize_featherstack();
+        translate([  12, 0, 1 + TI30_default_height ]) rotate([ 0, 0, -90 ]) visualize_featherstack();
     }
 }
 
@@ -419,12 +642,9 @@ module component_feather_tripler() {
     
     // visualizations for this device
     if (show_internal_parts_for_collision_check) {
-        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) rotate([ 0, 0, -90 ])
-            roundedbox(vis_feather_length, vis_feather_width, 2, 1);
-        translate([ -24, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) rotate([ 0, 0, -90 ])
-            roundedbox(vis_feather_length, vis_feather_width, 2, 1);
-        translate([ 24, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) rotate([ 0, 0, -90 ])
-            roundedbox(vis_feather_length, vis_feather_width, 2, 1);
+        translate([ 0, 0, 1 + TI30_default_height ]) rotate([ 0, 0, -90 ]) visualize_featherstack();
+        translate([ -24, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) rotate([ 0, 0, -90 ]) visualize_featherstack();
+        translate([ 24, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) rotate([ 0, 0, -90 ]) visualize_featherstack();
     }
 }
 /*
@@ -526,6 +746,55 @@ module component_L298motor_driver() {
     }
 }
 
+/*
+ * ***************************************************************************
+ * this makes a base for Sparkfun QWIIC (I2C) motor driver board
+ * its base is 1mm thick, and 44 x 44 mm
+ * it has 4 M3 threaded insert mounts 37.5 x 37.5 mm spacing
+ *  
+ * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
+ * it is generated in "landscape" shape
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * purchase: https://www.sparkfun.com/products/15451
+ * reference: https://learn.sparkfun.com/tutorials/hookup-guide-for-the-qwiic-motor-driver
+ * this drives (2) DC brushed motors; up to 1.2A
+ * ***************************************************************************
+ */
+board_qwiic_motor_length = 28;
+board_qwiic_motor_width = 28;
+board_qwiic_motor_screw_x = 20.3;
+board_qwiic_motor_screw_y = 20.3;
+
+module component_qwiic_motor_driver() {
+    roundedbox(board_qwiic_motor_length, board_qwiic_motor_width, 2, 1);
+    
+    translate([ -(board_qwiic_motor_screw_x/2), -(board_qwiic_motor_screw_y/2), 1]) TI30_mount(); 
+    translate([ -(board_qwiic_motor_screw_x/2), +(board_qwiic_motor_screw_y/2), 1]) TI30_mount();
+    translate([ +(board_qwiic_motor_screw_x/2), -(board_qwiic_motor_screw_y/2), 1]) TI30_mount();
+    translate([ +(board_qwiic_motor_screw_x/2), +(board_qwiic_motor_screw_y/2), 1]) TI30_mount();
+       
+    translate([0, 4, 0]) linear_extrude(2) text("QWIIC", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    translate([0, -4, 0]) linear_extrude(2) text("MotDrv", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    translate([0, -12, 0]) linear_extrude(2) text("M3",
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    
+    // visualizations for this device
+    if (show_internal_parts_for_collision_check) {
+        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
+            roundedbox(board_qwiic_motor_length, board_qwiic_motor_width, 2, 1);
+        translate([ 0, 12, 1 + TI30_default_height + 1 ]) color([ 0.8, 0, 0 ]) 
+            roundedbox(6, 5, 1, 3);
+        translate([ 0, -12, 1 + TI30_default_height + 1 ]) color([ 0.8, 0, 0 ]) 
+            roundedbox(6, 5, 1, 3);
+        translate([ -11, -0, 1 + TI30_default_height + 1 ]) color([ 0.8, 0, 0 ]) 
+            roundedbox(6, 8, 1, 6);
+        translate([ 11, -0, 1 + TI30_default_height + 1 ]) color([ 0.8, 0, 0 ]) 
+            roundedbox(6, 12, 1, 6);
+    }
+}
 
 
 /*
@@ -533,6 +802,8 @@ module component_L298motor_driver() {
  * this makes a base for geared stepper driver board
  * its base is 1mm thick, and 35 x 32 mm
  * it has 4 M3 threaded insert mounts 29.5 x 26.5 mm spacing
+ * 
+ * the "upper" version is for a stacked upper board with only 2 screws (cantilevered mount)  
  *  
  * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
  * it is generated in "landscape" shape
@@ -587,6 +858,46 @@ module component_gearedstepper_driver() {
     }
 }
 
+module component_gearedstepper_driver_upper() {
+    lift_amount = 26;
+
+    roundedbox(board_gearedstepper_length, board_gearedstepper_width, 2, 1);
+    
+    translate([ -(board_gearedstepper_screw_x/2), -(board_gearedstepper_screw_y/2), 1]) TI30_mount(lift_amount); 
+    translate([ -(board_gearedstepper_screw_x/2), +(board_gearedstepper_screw_y/2), 1]) TI30_mount(lift_amount);
+    translate([ +(board_gearedstepper_screw_x/2), -(board_gearedstepper_screw_y/2), 1]) TI30_mount(lift_amount);
+       
+    translate([0, 4, 0]) linear_extrude(2) text("Geared", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    translate([0, -4, 0]) linear_extrude(2) text("Stepper", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    translate([0, -12, 0]) linear_extrude(2) text("M3",
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    
+    // visualizations for this device
+    if (show_internal_parts_for_collision_check) {
+        translate([ 0, 0, 1 + lift_amount ]) color([ 1, 0, 0 ]) 
+            roundedbox(board_gearedstepper_length, board_gearedstepper_width, 2, 1);
+        
+        translate([ -4, 5, 1 + lift_amount + 1 ]) color([ 0.8, 0, 0 ]) 
+            roundedbox(10, 20, 1, 9);
+        translate([ 5 , 6, 1 + lift_amount + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+            roundedbox(6, 16, 1, 8);
+        translate([ -11, 6, 1 + lift_amount + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+            roundedbox(2, 10, 1, 8);
+        translate([ -5, -10, 1 + lift_amount + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+            roundedbox(10, 2, 1, 8);
+        translate([ 12.5, -4, 1 + lift_amount + 1 ]) color([ 0.8, 0, 0 ]) 
+            cylinder(r=1.7, h=6);
+        translate([ 12.5, 0, 1 + lift_amount + 1 ]) color([ 0.8, 0, 0 ]) 
+            cylinder(r=1.7, h=6);
+        translate([ 12.5, 4, 1 + lift_amount + 1 ]) color([ 0.8, 0, 0 ]) 
+            cylinder(r=1.7, h=6);
+        translate([ 12.5, 8, 1 + lift_amount + 1 ]) color([ 0.8, 0, 0 ]) 
+            cylinder(r=1.7, h=6);
+    }
+}
+
 /*
  * ***************************************************************************
  * this makes a base for sparkfun_easydriver board
@@ -632,6 +943,13 @@ module component_easydriver() {
             roundedbox(38, 2, 1, 2);
     }
 }
+
+
+
+
+
+
+
 
 
 /*
@@ -820,7 +1138,7 @@ module component_geared_stepper_motor(mode="holes") {
                 cylinder( r=(7.8 / 2), h=2);    // bearing housing 
             translate([ 0, -8, body_wall_thickness - 9 ]) 
                 color([ 1, 0, 0 ]) 
-                cylinder( r=(5 / 2), h=11);    // shaft       
+                shaft_flat(5, 3, 11);   // shaft     
         }
     }
 }
@@ -953,9 +1271,9 @@ module component_TT_blue_motor(mode="holes") {
         // under-hole in case it sits low in box
         translate([ (38/2)-11.5, 0, 0 ])  union() {
             roundedbox(38, 22.5, 2, 22);
-            translate([ -(37/2)-5, (-5/2)-1, (19/2)-(3/2)-0.5 ])cube([ 5, 7, 4]);
+            translate([ -(37/2)-5, (-5/2)-1, (19/2)-(3/2)-0.5 ]) cube([ 5, 7, 4]);
         }
-        translate([ 37-11-5, 0, (19/2) ]) rotate([ 0, 90, 0 ])cylinder( r=(23.5 / 2), h=27);    // motor body 
+        translate([ 37-11-5, 0, (19/2) ]) rotate([ 0, 90, 0 ]) shaft_flat(23.5, 20, 28, "tall");   // motor body 
     }
     
     if (mode == "adds") {
@@ -969,6 +1287,7 @@ module component_TT_blue_motor(mode="holes") {
                 color([ 1, 0, 0 ]) difference() {
                         union() {
                             roundedbox(37, 22.5, 2, 19);    // gear body
+
                             // end mounting tab
                             translate([ -(37/2)-5, (-5/2), (19/2)-(3/2) ]) difference() {
                                 cube([ 5, 5, 3]);
@@ -985,9 +1304,7 @@ module component_TT_blue_motor(mode="holes") {
                 rotate([ 0, 90, 0 ])   union() {
                     difference() {
                         color([ 1, 0, 0 ])
-                        cylinder( r=(22.5 / 2), h=26);    // motor body 
-                        translate([ -(17.5/2)-4, -(22.5/2), -1]) cube([ 4, 22.5, 28 ]);
-                        translate([ (17.5/2),  -(22.5/2), -1]) cube([ 4, 22.5, 28 ]);
+                        shaft_flat(22.5, (17.5), 26, "tall");   // motor body (the flattend round part)
                     }
                     translate([ (17.5/2),  -(6/2), 4]) color([ 1, 0, 0 ]) cube([ 3, 6, 3 ]);    // strap clamp
                     translate([ -(17.5/2)-3,  -(6/2), 4]) color([ 1, 0, 0 ]) cube([ 3, 6, 3 ]); // strap clamp
@@ -1001,7 +1318,7 @@ module component_TT_blue_motor(mode="holes") {
             // shaft
             translate([ 0, -0, -9 ]) 
                 color([ 1, 0, 0 ]) 
-                cylinder( r=(5.5 / 2), h=9);    // shaft       
+                shaft_flat(5, 3, 9);   // shaft     
         }
     }
 }
@@ -1026,7 +1343,7 @@ module component_TT_yellow_motor(mode="holes") {
             roundedbox(38, 22.5, 2, 22);
             translate([ -(37/2)-5, (-5/2)-1, (19/2)-(3/2)-0.5 ]) cube([ 5, 7, 4]);
         }
-        translate([ 37-11-5, 0, (19/2) ]) rotate([ 0, 90, 0 ]) cylinder( r=(23.5 / 2), h=27);    // motor body 
+        translate([ 37-11-5, 0, (19/2) ]) rotate([ 0, 90, 0 ]) shaft_flat(23.5, 20, 28, "tall");   // motor body
     }
     
     if (mode == "adds") {
@@ -1040,6 +1357,7 @@ module component_TT_yellow_motor(mode="holes") {
                 color([ 1, 0, 0 ]) difference() {
                         union() {
                             roundedbox(37, 22.5, 2, 19);    // gear body
+
                             // end mounting tab
                             translate([ -(37/2)-5, (-5/2), (19/2)-(3/2) ]) difference() {
                                 cube([ 5, 5, 3]);
@@ -1056,9 +1374,7 @@ module component_TT_yellow_motor(mode="holes") {
                 rotate([ 0, 90, 0 ])   union() {
                     difference() {
                         color([ 1, 0, 0 ])
-                        cylinder( r=(22.5 / 2), h=26);    // motor body 
-                        translate([ -(17.5/2)-4, -(22.5/2), -1]) cube([ 4, 22.5, 28 ]);
-                        translate([ (17.5/2),  -(22.5/2), -1]) cube([ 4, 22.5, 28 ]);
+                        shaft_flat(22.5, (17.5), 26, "tall");   // motor body (the flattend round part)
                     }
                     translate([ (17.5/2),  -(6/2), 4]) color([ 1, 0, 0 ]) cube([ 3, 6, 3 ]);    // strap clamp
                     translate([ -(17.5/2)-3,  -(6/2), 4]) color([ 1, 0, 0 ]) cube([ 3, 6, 3 ]); // strap clamp
@@ -1072,7 +1388,7 @@ module component_TT_yellow_motor(mode="holes") {
             // shaft
             translate([ 0, -0, -9 ]) 
                 color([ 1, 0, 0 ]) 
-                cylinder( r=(5.5 / 2), h=37);    // shaft       
+                shaft_flat(5, 3, 37);   // shaft      
         }
     }
 }
@@ -1098,7 +1414,9 @@ module component_TT_DFR_motor(mode="holes") {
             roundedbox(38, 22.5, 2, 22);
             translate([ -(37/2)-5, (-5/2)-1, (19/2)-(3/2)-0.5 ]) cube([ 5, 7, 4]);
         }
-        translate([ 37-11-5, 0, (19/2) ]) rotate([ 0, 90, 0 ]) cylinder( r=(22.5 / 2), h=33);    // motor body 
+        translate([ 37-11-5, 0, (19/2) ]) rotate([ 0, 90, 0 ]) shaft_flat(23.5, 20, 37, "tall");   // motor body
+        translate([ 37-11+10-5, 0, (19/2) ]) rotate([ 0, 90, 0 ]) shaft_d_r(29.5, 10, 24, "tall");   // round part of PCB
+        translate([ 37-11-3, -(21/2), 2 ]) cube([31, 21, 31 ]);   // square connector
     }
     
     if (mode == "adds") {
@@ -1112,6 +1430,7 @@ module component_TT_DFR_motor(mode="holes") {
                 color([ 1, 0, 0 ]) difference() {
                         union() {
                             roundedbox(37, 22.5, 2, 19);    // gear body
+
                             // end mounting tab
                             translate([ -(37/2)-5, (-5/2), (19/2)-(3/2) ]) difference() {
                                 cube([ 5, 5, 3]);
@@ -1128,9 +1447,7 @@ module component_TT_DFR_motor(mode="holes") {
                 rotate([ 0, 90, 0 ])   union() {
                     difference() {
                         color([ 1, 0, 0 ])
-                        cylinder( r=(22.5 / 2), h=26);    // motor body  
-                        translate([ -(17.5/2)-4, -(22.5/2), -1]) cube([ 4, 22.5, 32 ]);
-                        translate([ (17.5/2),  -(22.5/2), -1]) cube([ 4, 22.5, 32 ]);
+                        shaft_flat(22.5, (17.5), 26, "tall");   // motor body (the flattend round part)
                     }
                     translate([ 0, 0, 27 ]) color([ 0.2, 0.2, 0.2 ]) cylinder( r=(18 / 2), h=3);    // magnet disc
                     translate([ (17.5/2),  -(6/2), 4]) color([ 1, 0, 0 ]) cube([ 3, 6, 3 ]);    // strap clamp
@@ -1151,12 +1468,83 @@ module component_TT_DFR_motor(mode="holes") {
 
             // shaft
             translate([ 0, -0, -9 ]) 
-                color([ 1, 0, 0 ]) 
-                cylinder( r=(5.5 / 2), h=9);    // shaft       
+                color([ 1, 0, 0 ])  
+                shaft_flat(5, 3, 9);   // shaft  
         }
     }
 }
 
+/*
+ * ****************************************
+ * TT Motor Clamp (standalone component) 
+ * Note that M3 screw holes are 35 mm apart
+ * ****************************************
+ */
+ttmc_clamp_width = 15;
+ttmc_internal_motor_depth = 18.5;
+ttmc_internal_motor_width = 22.5;
+ttmc_strap_thickness = 2.4;
+ttmc_mount_screw_spacing = 35;
+ttmc_foot_width = 8;
+
+module component_tt_motor_clamp() {
+    difference() {
+        union() {
+            difference() {
+                translate([ -((ttmc_internal_motor_width + (2*ttmc_strap_thickness))/2), 0, 0 ]) 
+                    cube([ ttmc_internal_motor_width + (2*ttmc_strap_thickness), ttmc_internal_motor_depth + ttmc_strap_thickness, ttmc_clamp_width ]);
+                translate([ -(ttmc_internal_motor_width/2), -0.1, -0.1 ]) 
+                    cube([ ttmc_internal_motor_width, ttmc_internal_motor_depth+0.2, ttmc_clamp_width+0.2 ]);
+            }
+            translate([ -((ttmc_internal_motor_width + (2*ttmc_strap_thickness))/2)-ttmc_foot_width, -0.1, -0.1 ])
+                cube([ ttmc_foot_width, 3, ttmc_clamp_width ]);
+            translate([ ((ttmc_internal_motor_width + (2*ttmc_strap_thickness))/2), -0.1, -0.1 ]) 
+                cube([ ttmc_foot_width, 3, ttmc_clamp_width ]);
+        }               
+
+        translate([ -(ttmc_mount_screw_spacing/2), -0.2, (ttmc_clamp_width/2) ]) rotate([ -90, 0, 0 ]) union() {
+            cylinder(r=screwhole_radius_M30_selftap, 6);
+            translate([ ttmc_mount_screw_spacing, 0, 0 ]) cylinder(r=screwhole_radius_M30_selftap, 6);
+        }
+    }
+}
+
+/*
+ * ****************************************
+ * Pololu Motor Clamp (standalone component) 
+ * Note that M3 screw holes are 30 mm apart to match purchasable Pololu part
+ * reference: https://www.pololu.com/
+ * ****************************************
+ */
+
+pmc_clamp_width = 13;
+pmc_internal_motor_depth = 13.8;
+pmc_internal_motor_width = 24.8;
+pmc_strap_thickness = 1.6;
+pmc_mount_screw_spacing = 30;
+pmc_foot_width = 6;
+
+module component_pololu_miniplastic_motor_clamp() {
+    difference() {
+        union() {
+            difference() {
+                translate([ -((pmc_internal_motor_width + (2*pmc_strap_thickness))/2), 0, 0 ]) 
+                    cube([ pmc_internal_motor_width + (2*pmc_strap_thickness), pmc_internal_motor_depth + pmc_strap_thickness, pmc_clamp_width ]);
+                translate([ -(pmc_internal_motor_width/2), -0.1, -0.1 ]) 
+                    cube([ pmc_internal_motor_width, pmc_internal_motor_depth+0.2, pmc_clamp_width+0.2 ]);
+            }
+            translate([ -((pmc_internal_motor_width + (2*pmc_strap_thickness))/2)-pmc_foot_width, -0.1, -0.1 ])
+                cube([ pmc_foot_width, 3, pmc_clamp_width ]);
+            translate([ ((pmc_internal_motor_width + (2*pmc_strap_thickness))/2), -0.1, -0.1 ]) 
+                cube([ pmc_foot_width, 3, pmc_clamp_width ]);
+        }               
+
+        translate([ -(pmc_mount_screw_spacing/2), -0.2, (pmc_clamp_width/2) ]) rotate([ -90, 0, 0 ]) union() {
+            cylinder(r=screwhole_radius_M30_selftap, 6);
+            translate([ pmc_mount_screw_spacing, 0, 0 ]) cylinder(r=screwhole_radius_M30_selftap, 6);
+        }
+    }
+}
 
 /*
  * ****************************************************************************************
@@ -1190,7 +1578,7 @@ module component_pololu_miniplastic_motor(mode="holes") {
             translate([ 0, -(20/2), 0 ]) color([ 1, 0, 0 ]) cube([ 45, 20, 13.8 ]);    // main body
             translate([ 28.5, -(24.5/2), 0 ]) color([ 1, 0, 0 ]) cube([ 3, 24.5, 13.8 ]);    // flange
             translate([ 45, -(20/2), 1.2 ]) color([ 0.8, 0.8, 0.8 ]) cube([ 2, 20, 16.5 ]);    // encoder pcb
-            translate([ 47, 0, 6.9 ]) rotate([ 0, 90, 0 ]) color ([ 0.4, 0.4, 0.4 ])cylinder( r=(10 / 2), h=3); 
+            translate([ 47, 0, 6.9 ]) rotate([ 0, 90, 0 ]) color ([ 0.4, 0.4, 0.4 ]) cylinder( r=(10 / 2), h=3); 
 
             // shaft
             translate([ 0, -0, -10 ]) 
@@ -1199,3 +1587,287 @@ module component_pololu_miniplastic_motor(mode="holes") {
         }
     }
 }
+
+
+/*
+ * **************************************************************************
+ * LiPo Battery boxes
+ * **************************************************************************
+ */
+
+battbox_wall_thickness = 2;
+battbox_lid_thickness = 3;
+
+batt_lipo_1200_width = 35;
+batt_lipo_1200_length = 63;
+batt_lipo_1200_thick = 6;
+
+module component_battbox_lipo_1200() {
+    // Dimensions: 34mm x 62mm x 5mm / 1.3" x 2.4" x 0.2"
+    // Purchase: https://www.adafruit.com/product/258
+
+    difference() {
+        union() {
+            roundedbox( batt_lipo_1200_width + (2*battbox_wall_thickness), batt_lipo_1200_length + (2*battbox_wall_thickness), 2, batt_lipo_1200_thick );
+            translate([ +10, -(batt_lipo_1200_length/2)-3, 0 ]) TI30_mount(batt_lipo_1200_thick);
+            translate([ -10, (batt_lipo_1200_length/2)+3, 0 ])TI30_mount(batt_lipo_1200_thick);
+        }
+        roundedbox( batt_lipo_1200_width, batt_lipo_1200_length, 1, batt_lipo_1200_thick+0.1 );
+        translate([ -5, (batt_lipo_1200_length/2)-0.1, 0 ]) cube([ 10, battbox_wall_thickness+0.2, batt_lipo_1200_thick+0.1]);
+    }   
+    
+}
+
+
+batt_lipo_500_width = 30;
+batt_lipo_500_length = 37;
+batt_lipo_500_thick = 5.75;
+
+module component_battbox_lipo_500() {
+    // Size: 29mm x 36mm x 4.75mm / 1.15" x 1.4" x 0.19"
+    // Purchase: https://www.adafruit.com/product/1578
+
+    difference() {
+        union() {
+            roundedbox( batt_lipo_500_width + (2*battbox_wall_thickness), batt_lipo_500_length + (2*battbox_wall_thickness), 2, batt_lipo_500_thick );
+            translate([ +10, -(batt_lipo_500_length/2)-3, 0 ]) TI30_mount(batt_lipo_500_thick);
+            translate([ -10, (batt_lipo_500_length/2)+3, 0 ])TI30_mount(batt_lipo_500_thick);
+        }
+        roundedbox( batt_lipo_500_width, batt_lipo_500_length, 1, batt_lipo_500_thick+0.1 );
+        translate([ -5, (batt_lipo_500_length/2)-0.1, 0 ]) cube([ 10, battbox_wall_thickness+0.2, batt_lipo_500_thick+0.1]);
+    }
+    
+}
+
+
+batt_lipo_cyl_dia = 18;
+batt_lipo_cyl_length = 69;
+module component_battbox_lipo_cylinder(mode="holes") {
+    // Size: 69mm x 18mm dia 
+    // Purchase: https://www.adafruit.com/product/1781
+    
+    if (mode == "holes") {
+        translate([ 0, 0, -0.1 ]) cylinder(r=(batt_lipo_cyl_dia/2)+1, h=lid_thickness+0.2);
+    }
+    
+    if (mode == "adds") {
+        // note this needs to generate a bottom cap or cross bolt based on height of box, or make it shorter for short boxes
+        translate([ 0, 0, lid_thickness ]) difference() {
+            cylinder(r=(batt_lipo_cyl_dia/2)+battbox_wall_thickness, h=(batt_lipo_cyl_length+5));
+            translate([ 0, 0, -0.1 ]) cylinder(r=(batt_lipo_cyl_dia/2)+1, h=70);
+        }
+    }
+        
+    // visualizations for this device
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) {
+            translate([ 0, 0, lid_thickness ]) color([ 0, 0, 1 ]) cylinder(r=(batt_lipo_cyl_dia/2)+battbox_wall_thickness, h=(batt_lipo_cyl_length+5));
+        }
+    }
+       
+}
+
+
+
+/*
+ * ***************************************************************************
+ * this makes a base for schmartboard power distribution stripboard
+ * its base is 1mm thick, and 12.7mm x 50.8mm (0.5 x 2in) 
+ * it has 2 M3 threaded insert mounts on 43.2mm (1.7in) spacing
+ *  
+ * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
+ * it is generated in "landscape" shape
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * purchase: https://www.tindie.com/products/Schmart/through-hole-power-ground-strip-05x2-grid/
+ * purchase: https://www.digikey.com/en/products/detail/schmartboard-inc/201-0100-01/9559296
+ * ***************************************************************************
+ */
+board_schmart_length = 50.8;
+board_schmart_width = 12.7;
+board_schmart_mount_spacing = 43.2;
+
+module component_schmart() {
+    roundedbox(board_schmart_length, board_schmart_width, 2, 1);
+    
+    translate([ -(board_schmart_mount_spacing/2), 0, 1]) TI30_mount();
+    translate([ +(board_schmart_mount_spacing/2), 0, 1]) TI30_mount();
+       
+    translate([0, -3, 0]) linear_extrude(2) text("Buss M3", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    
+    // visualizations for this device
+    if (show_internal_parts_for_collision_check) {
+        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
+            roundedbox(board_schmart_length, board_schmart_width, 2, 1);
+
+        translate([ 0, +4.3, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+            roundedbox(40, 2, 1, 8);
+        translate([ 0, +1.4, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+            roundedbox(34, 2, 1, 8);
+        translate([ 0, -1.4, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+            roundedbox(34, 2, 1, 8);
+        translate([ 0, -4.3, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+            roundedbox(40, 2, 1, 8);
+    }
+}
+
+
+
+/*
+ * ***************************************************************************
+ * this makes a base for amazon adjustable boost converter
+ * its base is 1mm thick, and 22mm x 44mm 
+ * it has 2 M3 threaded insert mounts diagonally on 15mm x 30mm spacing
+ *  
+ * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
+ * it is generated in "landscape" shape
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * purchase: https://www.amazon.com/Converter-Voltage-Adjustable-Step-up-Circuit/dp/B07XG323G8 or equiv
+ *
+ * ***************************************************************************
+ */
+board_amazon_boost_length = 44;
+board_amazon_boost_width = 22;
+mount_amazon_boost_x = 30;
+mount_amazon_boost_y = 15;
+
+module component_amazon_boost() {
+    roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+    
+    translate([ -mount_amazon_boost_x/2, mount_amazon_boost_y/2, 1]) TI30_mount();
+    translate([ mount_amazon_boost_x/2, -mount_amazon_boost_y/2, 1]) TI30_mount();
+       
+    translate([ 4, +2, 0]) linear_extrude(2) text("Amazon", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    translate([-2, -6, 0]) linear_extrude(2) text("Boost M3", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    
+    // visualizations for this device
+    if (show_internal_parts_for_collision_check) {
+        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
+            roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+        translate([ -7, 5, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+            roundedbox(10, 5, 1, 10);       // trimpot
+        translate([ -7, -4, 1 + TI30_default_height ]) color([ 0.8,, 0, 0 ]) 
+            roundedbox(12, 12, 1, 7);       // toroid
+        translate([ 6, -4, 1 + TI30_default_height ]) color([ 0.8,, 0, 0 ]) 
+            roundedbox(10, 8, 1, 4);       // ic
+        translate([ 17, 0, 1 + TI30_default_height ]) color([ 0.8,, 0, 0 ]) 
+            cylinder(r=4, h=10);       // cap
+        translate([ -17, 0, 1 + TI30_default_height ]) color([ 0.8,, 0, 0 ]) 
+            cylinder(r=4, h=10);       // cap
+    }
+}
+
+
+/*
+ * ***************************************************************************
+ * this makes a base for pololu boost converter
+ * its base is 1mm thick, and 15.24mm x 40.64mm (0.6in x 1.6in)
+ * it has 2 M2 threaded insert mounts diagonally on 10.9mm x 36.3 spacing
+ *  
+ * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
+ * it is generated in "landscape" shape
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * purchase: https://www.amazon.com/Converter-Voltage-Adjustable-Step-up-Circuit/dp/B07XG323G8 or equiv
+ *
+ * ***************************************************************************
+ */
+board_pololu_boost_length = 42;
+board_pololu_boost_width = 17;
+mount_pololu_boost_x = 36.3;
+mount_pololu_boost_y = 10.9;
+
+module component_pololu_boost() {
+    roundedbox(board_pololu_boost_length, board_pololu_boost_width, 2, 1);
+    
+    translate([ -mount_pololu_boost_x/2, mount_pololu_boost_y/2, 1]) TI20_mount();
+    translate([ mount_pololu_boost_x/2, -mount_pololu_boost_y/2, 1]) TI20_mount();
+       
+    translate([ 4, +2, 0]) linear_extrude(2) text("Pololu", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    translate([-2, -6, 0]) linear_extrude(2) text("Boost M2", 
+        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    
+    // visualizations for this device
+    if (show_internal_parts_for_collision_check) {
+        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
+            roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+        translate([ -7, 5, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+            roundedbox(10, 10, 1, 5);       // transistor
+        translate([ 7, -4, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+            roundedbox(7, 7, 1, 7);       // trimpot
+    }
+}
+
+
+/*
+ * ***************************************************************************
+ * this makes a base for adafruit buck converter (3.3v output)
+ * its base is 1mm thick, and 17mm x 10mm 
+ * it has 1 M2.5 threaded insert mount centered at one end
+ *  
+ * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
+ * it is generated in "landscape" shape
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * purchase: https://www.adafruit.com/product/4711   3.3v buck 1.2A from 3.4 - 5.5v input
+ * purchase: https://www.adafruit.com/product/4683   3.3v buck 1.2A from 4.5 - 21v input
+ *
+ * ***************************************************************************
+ */
+board_adafruit_minibuck_length = 19;
+board_adafruit_minibuck_width = 11;
+
+module component_adafruit_minibuck() {
+    roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+    
+    translate([ -7, 0, 1]) M25_short_mount(5);
+       
+    translate([2, -3, 0]) linear_extrude(2) text("M25", 
+        size=5,  halign="center", font = "Liberation Sans:style=Bold");
+    
+    // visualizations for this device
+    if (show_internal_parts_for_collision_check) {
+        translate([ 0, 0, 1 + 5 ]) color([ 1, 0, 0 ]) 
+            roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+    }
+}
+
+/*
+ * ***************************************************************************
+ * this makes a base for adafruit boost converter (5v output)
+ * its base is 1mm thick, and 18mm x 11.3mm 
+ * it has 1 M2.5 threaded insert mount at left edge of one end
+ *  
+ * this is generated in xy plane, centered at origin, box outside skin is at z=0 (moving "into" box has +z)
+ * it is generated in "landscape" shape
+ * it should be "added" to design, there are no holes needed at placement level
+ *
+ * purchase: https://www.adafruit.com/product/4654  5v boost 1.0A from 2-5v input
+ *
+ * ***************************************************************************
+ */
+board_adafruit_miniboost_length = 20;
+board_adafruit_miniboost_width = 12;
+
+module component_adafruit_miniboost() {
+    roundedbox(board_adafruit_miniboost_length, board_adafruit_miniboost_width, 2, 1);
+    
+    translate([ -7, -3, 1]) M25_short_mount(5);
+       
+    translate([2, -3, 0]) linear_extrude(2) text("M25", 
+        size=5,  halign="center", font = "Liberation Sans:style=Bold");
+    
+    // visualizations for this device
+    if (show_internal_parts_for_collision_check) {
+        translate([ 0, 0, 1 + 5 ]) color([ 1, 0, 0 ]) 
+            roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+    }
+}
+
+

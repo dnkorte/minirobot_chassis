@@ -9,6 +9,12 @@
  * Author(s): Don Korte
  *
  * github: https://github.com/dnkorte/minirobot_chassis.git
+ *
+ * NOTE this tool attempts to place components in orientations/distances 
+ *  to minimize internal collisions.  not all possible combinations of
+ *  parts and box size are compatible.  before printing or committing to
+ *  a particular BOM or layout, use the "visualization" tools to
+ *  check for collisions with your particular configuration 
  *  
  * MIT License
  * 
@@ -33,8 +39,8 @@
  * SOFTWARE.
  */
 
-/* [Part to Design / Print] */
-part="box";  // ["box", "lid", "lid feature plate", "sonar clamp", "battery clamp", "peg caster", "test" ]
+/* [What PART do you want to model?] */
+part="box";  // ["box", "lid", "TT Motor Clamp", "Pololu Motor Clamp", "Lid Feature Plate", "test" ]
 
 /* [Main Box Size (outer)] */
 // mm LONG front-to-back (outside)
@@ -44,7 +50,7 @@ box_width = 90;       // [76, 80, 90, 96, 101]
 // mm TALL NOT including thickness of lid (default 55) 
 height_of_box = 55;  // [44, 55, 70, 90, 100] 
 // radius of vertical box corners and lid corners in mm
-box_corner_radius = 8;  // [6, 8, 10, 12, 15]
+box_corner_radius = 8;  // [6, 8, 10, 12]
 
 /* [Basic Box Features] */
 has_button_back_left = false;
@@ -55,7 +61,6 @@ has_toggle_back_ctr = false;
 has_toggle_back_left = false;
 has_toggle_back_right = false;
 has_beeper = false;
-box_bottom_PCB = "PermaProto Mini-Tin"; // ["none", "PermaProto Small-Mint", "Dual Small-Mint", "PermaProto HalfSize", "Red Tindie Proto", "Dual Red Tindie", "Triple Red Tindie", "Feather", "Feather Doubler", "Feather Tripler", "TB6612", "Dual TB6612", "TB6612 and Mint", "Dual TB6612 and Mint", "TB6612 and Feather", "Dual TB6612 and Feather", "L298_motor_driver", "L298 and Mint", "L298 and Feather", "Geared Stepper Driver", "Dual Geared Stepper Driver", "Sparkfun EasyDriver", "Dual Sparkfun EasyDriver"]
 
 /* [Advanced Box Features] */
 has_grabber_mounts_narrow = false;
@@ -64,32 +69,56 @@ has_front_sonar = false;
 has_back_sonar = false;
 linesensor_snout = "none";    // ["none", "PermaProto Small-Mint", "Dual Perma", "Red Tindie Proto"]
 
+/* [Inside-Box Electronics Boards] */
+box_bottom_PCB = "PermaProto Mini-Tin"; // ["none", "PermaProto Small-Mint", "Dual Small-Mint", "PermaProto HalfSize", "Red Tindie Proto", "Dual Red Tindie", "Triple Red Tindie", "Feather", "Feather Doubler", "Feather Tripler", "TB6612", "Dual TB6612", "TB6612 and Small-Mint", "Dual TB6612 and Small-Mint", "TB6612 and Feather", "Dual TB6612 and Feather", "QWIIC I2C Motor Driver", "QWIIC I2C Motor Driver + Small-Mint", "QWIIC I2C Motor Driver + Feather",  "L298_motor_driver", "L298 and Small-Mint", "L298 and Feather", "Geared Stepper Driver", "Dual Geared Stepper Driver", "Dual Geared Stepper Driver and Small-Mint", "Dual Geared Stepper Driver and Feather", "Dual Sparkfun EasyDriver", "Dual Sparkfun EasyDriver + Small-Mint", "Dual Sparkfun EasyDriver + Feather", "3 Small-Mint Inline", "Front Small-Mint + Raised Ctr Small-Mint", "F/B Small-Mint + Raised Ctr Small-Mint", "Front Red Tindie + Raised Ctr Red Tindie", "F/B Red Tindie + Raised Ctr Red Tindie", "Front Small-Mint + Raised Ctr Feather", "F/B Small-Mint + Raised Ctr Feather", "Front Red Tindie + Raised Ctr Feather", "F/B Red Tindie + Raised Ctr Feather"]
+
+// Some layouts allow a protoboards or Feathers to be raised higher than driver boards.  This allows you to avoid collisions with motors or other components if your box is tall enough
+board_raise_amount = 7; // [7:"No Added Lift (7mm high)", 17:"Lift to 17mm", 22:"Lift to 22mm", 27:"Lift to 27mm"]
+
 /* [Lid Features] */
 has_button_lid_left = false;
 has_button_lid_right = false;
 has_toggle_lid_left = false;
 has_toggle_lid_right = false;
 
-/* [Motors, Wheels and Batteries] */
-motor_type = "Geared Stepper";   // ["Geared Stepper", "Sparkfun Stepper", "Yellow TT Horizontal", "Yellow TT Vertical", "Blue TT Horizontal", "Blue TT Vertical", "DFR TT with Encoder H", "DFR TT with Encoder V", "Pololu MiniPlastic Horizontal", "Pololu MiniPlastic Vertical", "N20 Geared with Encoder", "Micro Servo Case"]
-motor_mount = "TT uses clamp";  // ["TT uses clamp", "TT uses long M3" ]
+/* [Motors, Wheels and Casters] */
 
-power_package = 0; // [0:No Power, 1:6v NiMH alone, 2: 6v NiMH + 500 mAH LiPo, 3:Big LiPo + 5v MiniBoost, 4: Big LiPo + Pololu Fixed Boost, 6:Big LiPo + Adjustable Boost, 7:Big LiPo + Adjustable Boost + 5v MiniBoost, 10:DEMO 2000 Lipo options, 11:DEMO 1200 LiPo options, 12:DEMO Cylindrical Lipo Options ]
+motor_type="Geared Stepper";   // ["Geared Stepper", "Sparkfun Stepper", "Yellow TT Horizontal", "Yellow TT Vertical", "Blue TT Horizontal", "Blue TT Vertical", "DFR TT with Encoder H", "DFR TT with Encoder V", "Pololu MiniPlastic Horizontal", "Pololu MiniPlastic Vertical", "N20 Geared with Encoder", "Micro Servo Case"]
+
+motor_mount = "TT uses clamp";  // ["TT uses clamp", "TT uses long bolts through motor" ]
+
+// Most desirably, the motor axle should be centered between the front and back of the box.  If the box is too short for this to happen with the selected motor the scripts will move the motor "forward" to keep it in the box.  If you check this box it will allow the motors to extend out the back of the box in order to keep the shafts centered.  
+allow_motors_to_extend_out_back_of_box = false;
 
 wheel_diameter = 59.8; // [ 59.8:Adafruit Skinny Wheel (any hub) 60, 65:Adafruit Thin White TT Wheel 65, 63:Adafruit Orange and Clear TT Wheel 63, 40:Pololu 40x7mm Wheel 40, 60:Pololu 60x8mm Wheel 60, 70:Pololu 70x8mm Wheel 70, 80:Pololu 80x10 Wheel 80, 42:DFR 42x19 Wheel 42, 65:DFR 65mm Rubber Wheel 65, 58:Custom 58x8mm Printed Wheel 58, 67:Custom 67x8mm Printed Wheel 67, 80:Custom 80x8mm Printed Wheel 80 ]
-// Note: if using a line sensor the caster should be 12-20mm
+
+// The caster controls the distance from the bottom of the box to the floor.  The scripts will move the motors up or down to maintain this distance regardless of the wheel diameter selected.  Note if using a line sensor the caster should be 12-20mm
 caster_height = 10.1; // [10.1:Pololu 3/8in no spacers (10.1), 11.7:Pololu 3/8in + 1/16 spacer (11.7), 13.3:Pololu 3/8in + 1/8 spacer (13.3), 13.5:Pololu 1/2in no spacers (13.5), 15.5:Pololu 1/2in + 1/16 spacer (15.1), 16.8:Pololu 1/2in + 1/8 spacer (16.8), 19:Custom Printed Peg (19), 19.5:Pololu 1/2in + custom 6mm spacer (19.5), 22.4:Pololu 3/4in no spacers (22.4), 25:Custom Printed Peg (25), 25.6:Pololu 3/4in + 1/8 spacer (25.6) ] 
 
-// note this clearance gap raises the box a bit and ensures that bumps or irregularities in the floor don't lift wheels off the ground
+// Note this clearance gap raises the box a bit and ensures that bumps or irregularities in the floor don't lift wheels off the ground
 caster_to_ground_gap = 2; // [ 1, 2, 3 ]
+
+
+/* [ Power Options] */
+
+// this creates 3.3v from LiPo or NiMH (Feather, Itsy need of this)
+want_3v_buck = true;
+
+// this creates 5v from LiPo or NiMH (Teensy, NeoPixels need this, Itsy can use this)
+want_5v_boost = true;
+
+// this creates 6-30v from LiPo or NiMH for motors; 
+boost_converter_for_motors = "None"; // ["None", "Front Adjustable", "Side Adjustable", "Front Pololu", "Side Pololu"]
+
+battery="2200 mAH Cylindrical Front Right"; // ["2200 mAH Cylindrical Front Right", "2200 mAH Cylindrical Front Center", "2-cell NiMH", "1200 mAH LiPo"]
+
+power_distribution_buss = "Long Way"; // ["none", "Long Way", "Long Way Set Back", "Wide Way"]
 
 /* [Visualization] */
 show_internal_parts_for_collision_check = false;
 show_lid_parts_for_collision_check = false;
-show_battery_components = false;
 show_box_walls = true;
-show_lid_power_components = false;
-height_of_visualized_feathers = 0; // [ 0:No Stacked Boards, 1:1 Board, 2:2 Boards, 3:3 Boards ]
+height_of_visualized_feathers = 1; // [ 1:1 Board, 2:2 Boards, 3:3 Boards ]
 
 /*
  * ************************************************************************************
@@ -97,17 +126,21 @@ height_of_visualized_feathers = 0; // [ 0:No Stacked Boards, 1:1 Board, 2:2 Boar
  * ************************************************************************************
  */
 module draw_part() {
-  $fn = 24;
- 
-  if(part=="box") {
-    box();
-  } else if(part=="lid") {
-    lid();
-  } else if(part=="battery clamp") {
-    // nothing
-  } else if(part=="test") {
-    component_pololu_miniplastic_motor(mode="adds"); 
-  }
+    $fn = 24;
+
+    if(part == "box") {
+        box();
+    } else if(part == "lid") {
+        lid();
+    } else if(part == "battery clamp") {
+        // nothing
+    } else if(part == "TT Motor Clamp") {
+        component_tt_motor_clamp();
+    } else if(part == "Pololu Motor Clamp") {
+        component_pololu_miniplastic_motor_clamp();
+    } else if(part == "test") {
+        component_qwiic_motor_driver();
+    }
 }
 
 /*
@@ -163,7 +196,7 @@ TI25_default_height = 6.0;
 // parameters for threaded insert mount (M2; McMaster-Carr)
 // note if TI_20_use_threaded_insert == false then self-tap holes are generated
 TI20_use_threaded_insert = true;
-TI20_mount_diameter = 7;
+TI20_mount_diameter = 6;
 TI20_through_hole_diameter = 3.7; 
 TI20_default_height = 6.0; 
 
@@ -197,9 +230,6 @@ echo("wheel radius: ", wheel_radius);
 echo("caster height: " , caster_height);
 echo("shaft over box bottom: ", shaft_height_above_box_bottom);
 
-//if ((motor_battery < 0) && (caster_height < 18)) {
-//    echo("<span style='background-color:red'>NOTICE: Under-box battery requires at least an 18mm caster -- use a taller caster or use internal battery</span>");
-//}
 
 if ((linesensor_snout != "none") && (caster_height < 12)) {
     echo("<span style='background-color:red'>NOTICE: line follower works best with 12 - 20mm caster; please use a taller caster</span>");
@@ -219,6 +249,8 @@ lid_front_x = +(box_length/2);
 lid_back_x = -(box_length/2);
 lid_L_y = -(box_width/2);
 lid_R_y = +(box_width/2);
+
+max_height_for_batt = height_of_box - body_bottom_thickness;
 
 /*
  * *****************************************************************
@@ -264,8 +296,10 @@ module box() {
         place_sparkfun_stepper_motor("holes");
         place_n20_motor("holes");
         place_TT_motor("holes");
-        place_power_components("holes");
         place_pololu_miniplastic_motor("holes");
+        place_battery("holes");
+        place_power_distribution("holes");
+        place_boost_buck(mode="holes");
     }
     
     // now if we want to check for collisions, we show a blue image of lid lip
@@ -300,8 +334,10 @@ module box() {
     place_sparkfun_stepper_motor("adds");
     place_n20_motor("adds");
     place_TT_motor("adds");
-    place_power_components("adds");
-    place_pololu_miniplastic_motor("adds");
+    place_pololu_miniplastic_motor("adds");    
+    place_battery("adds");
+    place_power_distribution("adds");
+    place_boost_buck(mode="adds");
 }
 
 module lid() {
@@ -315,14 +351,18 @@ module lid() {
         // here enter all the parts that are "removed" from the lid
         place_mini_toggle_switch("holes");
         place_pushbuttons("holes");
-        place_power_components(mode="holes");
+        //place_power_components(mode="holes");
+        place_battery("holes");
+        place_power_distribution("holes");
+        place_boost_buck(mode="holes");
     }
     
     // now enter the parts that are added to the lid
     place_mini_toggle_switch("adds");
     place_pushbuttons("adds");  
-    //place_red_protoboard("adds");
-    place_power_components(mode="adds");
-    
+    //place_power_components("adds");
+    place_battery("adds");
+    place_power_distribution("adds");
+    place_boost_buck(mode="adds");
 }
 
