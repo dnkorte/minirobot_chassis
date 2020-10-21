@@ -989,7 +989,15 @@ module component_mini_toggle_switch(mode="holes") {
             translate([ -4, 0, (switch_body_depth+3) ]) color([ 0.8, 0.8, 0.8 ]) 
                 roundedbox(2, 9, 1, 5);
         }
-    }
+    }  
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
     
     if (mode == "lidcheck") {
         // visualizations for this device
@@ -1041,6 +1049,15 @@ module component_adafruit_illuminated_pushbutton(mode="holes") {
                 roundedbox(2, 3, 1, 6);
         }
     }
+
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
     
     if (mode == "lidcheck") {
         // visualizations for this device
@@ -1602,20 +1619,50 @@ batt_lipo_1200_width = 35;
 batt_lipo_1200_length = 63;
 batt_lipo_1200_thick = 6;
 
-module component_battbox_lipo_1200() {
+
+module component_battbox_lipo_1200(mode="holes") {
     // Dimensions: 34mm x 62mm x 5mm / 1.3" x 2.4" x 0.2"
+    // this is generated in vertical orientation, as it would sit against front of box (portrait)
     // Purchase: https://www.adafruit.com/product/258
 
-    difference() {
-        union() {
-            roundedbox( batt_lipo_1200_width + (2*battbox_wall_thickness), batt_lipo_1200_length + (2*battbox_wall_thickness), 2, batt_lipo_1200_thick );
-            translate([ +10, -(batt_lipo_1200_length/2)-3, 0 ]) TI30_mount(batt_lipo_1200_thick);
-            translate([ -10, (batt_lipo_1200_length/2)+3, 0 ])TI30_mount(batt_lipo_1200_thick);
-        }
-        roundedbox( batt_lipo_1200_width, batt_lipo_1200_length, 1, batt_lipo_1200_thick+0.1 );
-        translate([ -5, (batt_lipo_1200_length/2)-0.1, 0 ]) cube([ 10, battbox_wall_thickness+0.2, batt_lipo_1200_thick+0.1]);
-    }   
+    length_of_battbox = min(max_length_for_battbox, (batt_lipo_1200_length));
+
+    if (mode == "holes") {
+        translate([ 0, 0, -0.1 ]) roundedbox( batt_lipo_1200_thick, batt_lipo_1200_width, 1, batt_lipo_1200_length+0.2 );
+    }
     
+    if (mode == "adds") {
+        difference() {
+            roundedbox( batt_lipo_1200_thick + (2*battbox_wall_thickness), batt_lipo_1200_width + (2*battbox_wall_thickness), 2, length_of_battbox );
+            roundedbox( batt_lipo_1200_thick, batt_lipo_1200_width, 1, length_of_battbox+0.2 );
+            // make a through-hole at bottom for M3 retaining screw
+            translate([ 0, 0, (length_of_battbox-3) ]) 
+                rotate([ 0, -90, 0 ])
+                translate([ 0, 0, -9 ])
+                    cylinder(r=screwhole_radius_M30_selftap, h=18); 
+        }   
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, length_of_battbox - batt_lipo_1200_length - 6 ]) color([ 1, 0, 0 ]) 
+                roundedbox( batt_lipo_1200_thick, batt_lipo_500_width, 1, batt_lipo_1200_length+0.2 );
+        } 
+    }
+
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
+    
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) { 
+            color([ 0, 0, 1 ])
+                roundedbox( batt_lipo_1200_thick + (2*battbox_wall_thickness), batt_lipo_1200_width + (2*battbox_wall_thickness), 2, length_of_battbox );
+        }      
+    }    
 }
 
 
@@ -1623,49 +1670,100 @@ batt_lipo_500_width = 30;
 batt_lipo_500_length = 37;
 batt_lipo_500_thick = 5.75;
 
-module component_battbox_lipo_500() {
-    // Size: 29mm x 36mm x 4.75mm / 1.15" x 1.4" x 0.19"
+module component_battbox_lipo_500(mode="holes") {
+    // Dimensions: 30mm x 37mm x 6mm / 1.3" x 2.4" x 0.2"
+    // this is generated in vertical orientation, as it would sit against front of box (portrait)
     // Purchase: https://www.adafruit.com/product/1578
 
-    difference() {
-        union() {
-            roundedbox( batt_lipo_500_width + (2*battbox_wall_thickness), batt_lipo_500_length + (2*battbox_wall_thickness), 2, batt_lipo_500_thick );
-            translate([ +10, -(batt_lipo_500_length/2)-3, 0 ]) TI30_mount(batt_lipo_500_thick);
-            translate([ -10, (batt_lipo_500_length/2)+3, 0 ])TI30_mount(batt_lipo_500_thick);
-        }
-        roundedbox( batt_lipo_500_width, batt_lipo_500_length, 1, batt_lipo_500_thick+0.1 );
-        translate([ -5, (batt_lipo_500_length/2)-0.1, 0 ]) cube([ 10, battbox_wall_thickness+0.2, batt_lipo_500_thick+0.1]);
+    length_of_battbox = min(max_length_for_battbox, (batt_lipo_500_length));
+    echo(length_of_battbox, batt_lipo_500_length, max_length_for_battbox);
+
+    if (mode == "holes") {
+        translate([ 0, 0, -0.1 ]) roundedbox( batt_lipo_500_thick, batt_lipo_500_width, 1, batt_lipo_500_length+0.2 );
     }
     
+    if (mode == "adds") {
+        difference() {
+            roundedbox( batt_lipo_500_thick + (2*battbox_wall_thickness), batt_lipo_500_width + (2*battbox_wall_thickness), 2, length_of_battbox );
+            roundedbox( batt_lipo_500_thick, batt_lipo_500_width, 1, length_of_battbox+0.2 );
+            // make a through-hole at bottom for M3 retaining screw
+            translate([ 0, 0, (length_of_battbox-3) ]) 
+                rotate([ 0, -90, 0 ])
+                translate([ 0, 0, -6 ])
+                    cylinder(r=screwhole_radius_M30_selftap, h=12); 
+        }  
+
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, length_of_battbox - batt_lipo_500_length - 6 ]) color([ 1, 0, 0 ]) 
+                roundedbox( batt_lipo_500_thick, batt_lipo_500_width, 1, batt_lipo_500_length+0.2 );
+        } 
+    }
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
+    
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) { 
+            color([ 0, 0, 1 ])
+                roundedbox( batt_lipo_500_thick + (2*battbox_wall_thickness), batt_lipo_500_width + (2*battbox_wall_thickness), 2, length_of_battbox );
+        }      
+    }    
 }
 
 
 batt_lipo_cyl_dia = 18;
 batt_lipo_cyl_length = 69;
+
 module component_battbox_lipo_cylinder(mode="holes") {
     // Size: 69mm x 18mm dia 
     // Purchase: https://www.adafruit.com/product/1781
+
+    length_of_battbox = min(max_length_for_battbox, (batt_lipo_cyl_length));
     
     if (mode == "holes") {
         translate([ 0, 0, -0.1 ]) cylinder(r=(batt_lipo_cyl_dia/2)+1, h=lid_thickness+0.2);
     }
     
     if (mode == "adds") {
-        // note this needs to generate a bottom cap or cross bolt based on height of box, or make it shorter for short boxes
         translate([ 0, 0, lid_thickness ]) difference() {
-            cylinder(r=(batt_lipo_cyl_dia/2)+battbox_wall_thickness, h=(batt_lipo_cyl_length+5));
-            translate([ 0, 0, -0.1 ]) cylinder(r=(batt_lipo_cyl_dia/2)+1, h=70);
+            // make outer walls of battery tube
+            cylinder(r=(batt_lipo_cyl_dia/2)+battbox_wall_thickness, h=(length_of_battbox));  
+            // hollow out the battery tube 
+            translate([ 0, 0, -0.1 ]) cylinder(r=(batt_lipo_cyl_dia/2)+1, h=70);   
+            // make a through-hole at bottom for M3 retaining screw
+            translate([ 0, 0, (length_of_battbox-3) ]) 
+                rotate([ 0, -90, 45 ])
+                translate([ 0, 0, -20 ])
+                    cylinder(r=screwhole_radius_M30_selftap, h=40); 
+        }
+
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, length_of_battbox - batt_lipo_cyl_length - 3 ]) color([ 1, 0, 0 ]) cylinder(r=(batt_lipo_cyl_dia/2), h=batt_lipo_cyl_length);
         }
     }
-        
-    // visualizations for this device
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
+    
     if (mode == "lidcheck") {
         // visualizations for this device
-        if (show_lid_parts_for_collision_check) {
-            translate([ 0, 0, lid_thickness ]) color([ 0, 0, 1 ]) cylinder(r=(batt_lipo_cyl_dia/2)+battbox_wall_thickness, h=(batt_lipo_cyl_length+5));
-        }
-    }
-       
+        if (show_lid_parts_for_collision_check) { 
+            translate([ 0, 0, lid_thickness ]) color([ 0, 0, 1 ]) cylinder(r=(batt_lipo_cyl_dia/2)+battbox_wall_thickness, h=(length_of_battbox));
+        }      
+    }   
 }
 
 
@@ -1688,28 +1786,60 @@ board_schmart_length = 50.8;
 board_schmart_width = 12.7;
 board_schmart_mount_spacing = 43.2;
 
-module component_schmart() {
-    roundedbox(board_schmart_length, board_schmart_width, 2, 1);
+module component_schmart(mode="adds") {
     
-    translate([ -(board_schmart_mount_spacing/2), 0, 1]) TI30_mount();
-    translate([ +(board_schmart_mount_spacing/2), 0, 1]) TI30_mount();
-       
-    translate([0, -3, 0]) linear_extrude(2) text("Buss M3", 
-        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    if (mode == "holes") {
+        // no holes for this device
+    }
     
-    // visualizations for this device
-    if (show_internal_parts_for_collision_check) {
-        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
-            roundedbox(board_schmart_length, board_schmart_width, 2, 1);
+    if (mode == "adds") {
+        roundedbox(board_schmart_length, board_schmart_width, 2, 1);
+        
+        translate([ -(board_schmart_mount_spacing/2), 0, 1]) TI30_mount();
+        translate([ +(board_schmart_mount_spacing/2), 0, 1]) TI30_mount();
+           
+        translate([0, -3, 0]) linear_extrude(2) text("Buss M3", 
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
+                roundedbox(board_schmart_length, board_schmart_width, 2, 1);
 
-        translate([ 0, +4.3, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
-            roundedbox(40, 2, 1, 8);
-        translate([ 0, +1.4, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
-            roundedbox(34, 2, 1, 8);
-        translate([ 0, -1.4, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
-            roundedbox(34, 2, 1, 8);
-        translate([ 0, -4.3, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
-            roundedbox(40, 2, 1, 8);
+            translate([ 0, +4.3, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+                roundedbox(40, 2, 1, 8);
+            translate([ 0, +1.4, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+                roundedbox(34, 2, 1, 8);
+            translate([ 0, -1.4, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+                roundedbox(34, 2, 1, 8);
+            translate([ 0, -4.3, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+                roundedbox(40, 2, 1, 8);
+        }
+    }
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
+    
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) { 
+            translate([ 0, 0, 1 + TI30_default_height ]) color([ 0, 0, 1 ]) 
+                roundedbox(board_schmart_length, board_schmart_width, 2, 1);
+
+            translate([ 0, +4.3, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+                roundedbox(40, 2, 1, 8);
+            translate([ 0, +1.4, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+                roundedbox(34, 2, 1, 8);
+            translate([ 0, -1.4, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+                roundedbox(34, 2, 1, 8);
+            translate([ 0, -4.3, 1 + TI30_default_height + 1 ]) color([ 0.8, 0.8, 0.8 ]) 
+                roundedbox(40, 2, 1, 8);
+        }      
     }
 }
 
@@ -1734,31 +1864,64 @@ board_amazon_boost_width = 22;
 mount_amazon_boost_x = 30;
 mount_amazon_boost_y = 15;
 
-module component_amazon_boost() {
-    roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+module component_amazon_boost(mode="adds") {
     
-    translate([ -mount_amazon_boost_x/2, mount_amazon_boost_y/2, 1]) TI30_mount();
-    translate([ mount_amazon_boost_x/2, -mount_amazon_boost_y/2, 1]) TI30_mount();
-       
-    translate([ 4, +2, 0]) linear_extrude(2) text("Amazon", 
-        size=6,  halign="center", font = "Liberation Sans:style=Bold");
-    translate([-2, -6, 0]) linear_extrude(2) text("Boost M3", 
-        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    if (mode == "holes") {
+        // no holes for this device
+    }
     
-    // visualizations for this device
-    if (show_internal_parts_for_collision_check) {
-        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
-            roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
-        translate([ -7, 5, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
-            roundedbox(10, 5, 1, 10);       // trimpot
-        translate([ -7, -4, 1 + TI30_default_height ]) color([ 0.8,, 0, 0 ]) 
-            roundedbox(12, 12, 1, 7);       // toroid
-        translate([ 6, -4, 1 + TI30_default_height ]) color([ 0.8,, 0, 0 ]) 
-            roundedbox(10, 8, 1, 4);       // ic
-        translate([ 17, 0, 1 + TI30_default_height ]) color([ 0.8,, 0, 0 ]) 
-            cylinder(r=4, h=10);       // cap
-        translate([ -17, 0, 1 + TI30_default_height ]) color([ 0.8,, 0, 0 ]) 
-            cylinder(r=4, h=10);       // cap
+    if (mode == "adds") {
+        roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+        
+        translate([ -mount_amazon_boost_x/2, mount_amazon_boost_y/2, 1]) TI30_mount();
+        translate([ mount_amazon_boost_x/2, -mount_amazon_boost_y/2, 1]) TI30_mount();
+           
+        translate([ 4, +2, 0]) linear_extrude(2) text("Amazon", 
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        translate([-2, -6, 0]) linear_extrude(2) text("Boost M3", 
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
+                roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+            translate([ -7, 5, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+                roundedbox(10, 5, 1, 10);       // trimpot
+            translate([ -7, -4, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+                roundedbox(12, 12, 1, 7);       // toroid
+            translate([ 6, -4, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+                roundedbox(10, 8, 1, 4);       // ic
+            translate([ 17, 0, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+                cylinder(r=4, h=10);       // cap
+            translate([ -17, 0, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+                cylinder(r=4, h=10);       // cap
+        }
+    }
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
+    
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) { 
+            translate([ 0, 0, 1 + TI30_default_height ]) color([ 0, 0, 1 ]) 
+                roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+            translate([ -7, 5, 1 + TI30_default_height ]) color([ 0, 0, 0.8 ]) 
+                roundedbox(10, 5, 1, 10);       // trimpot
+            translate([ -7, -4, 1 + TI30_default_height ]) color([ 0, 0, 0.8 ]) 
+                roundedbox(12, 12, 1, 7);       // toroid
+            translate([ 6, -4, 1 + TI30_default_height ]) color([ 0, 0, 0.8 ]) 
+                roundedbox(10, 8, 1, 4);       // ic
+            translate([ 17, 0, 1 + TI30_default_height ]) color([ 0, 0, 0.8 ]) 
+                cylinder(r=4, h=10);       // cap
+            translate([ -17, 0, 1 + TI30_default_height ]) color([ 0, 0, 0.8 ]) 
+                cylinder(r=4, h=10);       // cap
+        }      
     }
 }
 
@@ -1782,25 +1945,52 @@ board_pololu_boost_width = 17;
 mount_pololu_boost_x = 36.3;
 mount_pololu_boost_y = 10.9;
 
-module component_pololu_boost() {
-    roundedbox(board_pololu_boost_length, board_pololu_boost_width, 2, 1);
+module component_pololu_boost(mode="adds") {
     
-    translate([ -mount_pololu_boost_x/2, mount_pololu_boost_y/2, 1]) TI20_mount();
-    translate([ mount_pololu_boost_x/2, -mount_pololu_boost_y/2, 1]) TI20_mount();
-       
-    translate([ 4, +2, 0]) linear_extrude(2) text("Pololu", 
-        size=6,  halign="center", font = "Liberation Sans:style=Bold");
-    translate([-2, -6, 0]) linear_extrude(2) text("Boost M2", 
-        size=6,  halign="center", font = "Liberation Sans:style=Bold");
+    if (mode == "holes") {
+        // no holes for this device
+    }
     
-    // visualizations for this device
-    if (show_internal_parts_for_collision_check) {
-        translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
-            roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
-        translate([ -7, 5, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
-            roundedbox(10, 10, 1, 5);       // transistor
-        translate([ 7, -4, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
-            roundedbox(7, 7, 1, 7);       // trimpot
+    if (mode == "adds") {
+        roundedbox(board_pololu_boost_length, board_pololu_boost_width, 2, 1);
+        
+        translate([ -mount_pololu_boost_x/2, mount_pololu_boost_y/2, 1]) TI20_mount();
+        translate([ mount_pololu_boost_x/2, -mount_pololu_boost_y/2, 1]) TI20_mount();
+           
+        translate([ 4, +2, 0]) linear_extrude(2) text("Pololu", 
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        translate([-2, -6, 0]) linear_extrude(2) text("Boost M2", 
+            size=6,  halign="center", font = "Liberation Sans:style=Bold");
+        
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, 1 + TI30_default_height ]) color([ 1, 0, 0 ]) 
+                roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+            translate([ -7, 5, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+                roundedbox(10, 10, 1, 5);       // transistor
+            translate([ 7, -4, 1 + TI30_default_height ]) color([ 0.8, 0, 0 ]) 
+                roundedbox(7, 7, 1, 7);       // trimpot
+        }
+    }
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
+    
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) { 
+            translate([ 0, 0, 1 + TI30_default_height ]) color([ 0, 0, 1 ]) 
+                roundedbox(board_amazon_boost_length, board_amazon_boost_width, 2, 1);
+            translate([ -7, 5, 1 + TI30_default_height ]) color([ 0, 0, 0.8 ]) 
+                roundedbox(10, 10, 1, 5);       // transistor
+            translate([ 7, -4, 1 + TI30_default_height ]) color([ 0, 0, 0.8 ]) 
+                roundedbox(7, 7, 1, 7);       // trimpot
+        }      
     }
 }
 
@@ -1823,18 +2013,42 @@ module component_pololu_boost() {
 board_adafruit_minibuck_length = 19;
 board_adafruit_minibuck_width = 11;
 
-module component_adafruit_minibuck() {
-    roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+module component_adafruit_minibuck(mode="adds") {
     
-    translate([ -7, 0, 1]) M25_short_mount(5);
-       
-    translate([2, -3, 0]) linear_extrude(2) text("M25", 
-        size=5,  halign="center", font = "Liberation Sans:style=Bold");
+    if (mode == "holes") {
+        // no holes for this device
+    }
     
-    // visualizations for this device
-    if (show_internal_parts_for_collision_check) {
-        translate([ 0, 0, 1 + 5 ]) color([ 1, 0, 0 ]) 
-            roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+    if (mode == "adds") {
+        roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+        
+        translate([ -7, 0, 1]) M25_short_mount(5);
+           
+        translate([2, -3, 0]) linear_extrude(2) text("M25", 
+            size=5,  halign="center", font = "Liberation Sans:style=Bold");
+        
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, 1 + 5 ]) color([ 1, 0, 0 ]) 
+                roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+        }
+    }
+
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
+    
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) { 
+            translate([ 0, 0, 1 + 5 ]) color([ 0, 0, 1 ]) 
+                roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+        }      
     }
 }
 
@@ -1855,18 +2069,42 @@ module component_adafruit_minibuck() {
 board_adafruit_miniboost_length = 20;
 board_adafruit_miniboost_width = 12;
 
-module component_adafruit_miniboost() {
-    roundedbox(board_adafruit_miniboost_length, board_adafruit_miniboost_width, 2, 1);
+module component_adafruit_miniboost(mode="adds") {
     
-    translate([ -7, -3, 1]) M25_short_mount(5);
-       
-    translate([2, -3, 0]) linear_extrude(2) text("M25", 
-        size=5,  halign="center", font = "Liberation Sans:style=Bold");
+    if (mode == "holes") {
+        // no holes for this device
+    }
     
-    // visualizations for this device
-    if (show_internal_parts_for_collision_check) {
-        translate([ 0, 0, 1 + 5 ]) color([ 1, 0, 0 ]) 
-            roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+    if (mode == "adds") {
+        roundedbox(board_adafruit_miniboost_length, board_adafruit_miniboost_width, 2, 1);
+        
+        translate([ -7, -3, 1]) M25_short_mount(5);
+           
+        translate([2, -3, 0]) linear_extrude(2) text("M25", 
+            size=5,  halign="center", font = "Liberation Sans:style=Bold");
+        
+        // visualizations for this device
+        if (show_internal_parts_for_collision_check) {
+            translate([ 0, 0, 1 + 5 ]) color([ 1, 0, 0 ]) 
+                roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);
+        }
+    }
+
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff) 
+     * note that the component description is basically identical to the above except for the color
+     * in some cases it might be appropriate to simplify the part when details wouldn't matter
+     * note that this "lidcheck" mode is only needed for parts that would be reasonably expected
+     * to be able to live on the lid; 
+     */
+    
+    if (mode == "lidcheck") {
+        // visualizations for this device
+        if (show_lid_parts_for_collision_check) {
+            translate([ 0, 0, 1 + 5 ]) color([ 0, 0, 1 ]) 
+                roundedbox(board_adafruit_minibuck_length, board_adafruit_minibuck_width, 2, 1);  
+        }      
     }
 }
 

@@ -67,42 +67,121 @@ module place_battery(mode="holes") {
     wall_standoff = body_wall_thickness + lid_lip_thickness + ((batt_lipo_cyl_dia + (2*battbox_wall_thickness))/2);
 
     if ((battery == "2200 mAH Cylindrical Front Right") && (part == "lid")) {
-        translate([ lid_front_x - wall_standoff, (box_width/2) - wall_standoff, 0 ]) component_battbox_lipo_cylinder(mode);
+        translate([ lid_front_x - wall_standoff + 1, (box_width/2) - wall_standoff + 1, 0 ]) component_battbox_lipo_cylinder(mode);
     }
 
     if ((battery == "2200 mAH Cylindrical Front Center") && (part == "lid")) {
-        translate([ lid_front_x - wall_standoff -3.5, 0, 0 ]) component_battbox_lipo_cylinder(mode);
+        translate([ lid_front_x - wall_standoff -8, 0, 0 ]) component_battbox_lipo_cylinder(mode);
     }
 
-        
-    /* visualization for lidcheck */   
-
-    if ((battery == "2200 mAH Cylindrical Front Right") && (part == "box")) {
-        translate([ box_front_x + wall_standoff, (box_width/2) - wall_standoff, height_of_box ]) rotate([ 0, 180, 0 ]) component_battbox_lipo_cylinder("lidcheck");
-    }
-         
-    if ((battery == "2200 mAH Cylindrical Front Center") && (part == "box")) {
-        translate([ box_front_x + wall_standoff + 3.5, 0, height_of_box ]) rotate([ 0, 180, 0 ]) component_battbox_lipo_cylinder("lidcheck");
+    if ((battery == "1200 mAH LiPo Front Right") && (part == "lid")) {
+        if (box_width < 90) {
+            translate([ lid_front_x - wall_standoff + 3, (box_width/2) - (batt_lipo_1200_width/2) - 7, 0 ]) component_battbox_lipo_1200(mode);
+        } else {
+            translate([ lid_front_x - wall_standoff + 5, (box_width/2) - (batt_lipo_1200_width/2) - 7, 0 ]) component_battbox_lipo_1200(mode);
+        }
     }
 
+    if ((battery == "1200 mAH LiPo Front Center") && (part == "lid")) {
+            translate([ lid_front_x - wall_standoff -2, 0, 0 ]) component_battbox_lipo_1200(mode);
+    }
+
+    if ((battery == "500 mAH LiPo Front Right") && (part == "lid")) {
+        if (box_width < 90) {
+            translate([ lid_front_x - wall_standoff + 1, (box_width/2) - (batt_lipo_1200_width/2) - 5, 0 ]) component_battbox_lipo_500(mode);
+        } else {
+            translate([ lid_front_x - wall_standoff + 5, (box_width/2) - (batt_lipo_1200_width/2) - 5, 0 ]) component_battbox_lipo_500(mode);
+        }
+    }
+
+    if ((battery == "500 mAH LiPo Front Center") && (part == "lid")) {
+            translate([ lid_front_x - wall_standoff -2, 0, 0 ]) component_battbox_lipo_500(mode);
+    }
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff)
+     * these optionally show the lid components when generally displaying the box itself.  the "component" builders have a special
+     * mode called "lidcheck" that shows them in blue but otherwise similar to normal mode.  this mode is only available on parts
+     * that might be reasonably expected to live on the lid.       *
+     *
+     * note that the actual translatations/rotations of of these components is identical to the box placements above, excepting for the 
+     * mode declaration ("lidcheck") and the fact that is called for part == "box" instead of "lid".  
+     * the outer translate / rotate here takes care of moving all lidcheck pieces at once
+     */
+    
+    translate([ 0, 0, (height_of_box + lid_thickness) ]) rotate([ 0, 180, 0 ]) union() { 
+        if ((battery == "2200 mAH Cylindrical Front Right") && (part == "box")) {
+            translate([ lid_front_x - wall_standoff + 1, (box_width/2) - wall_standoff + 1, 0 ]) component_battbox_lipo_cylinder("lidcheck");
+        }
+
+        if ((battery == "2200 mAH Cylindrical Front Center") && (part == "box")) {
+            translate([ lid_front_x - wall_standoff -8, 0, 0 ]) component_battbox_lipo_cylinder("lidcheck");
+        }
+
+        if ((battery == "1200 mAH LiPo Front Right") && (part == "box")) {
+            if (box_width < 90) {
+                translate([ lid_front_x - wall_standoff + 3, (box_width/2) - (batt_lipo_1200_width/2) - 7, 0 ]) component_battbox_lipo_1200("lidcheck");
+            } else {
+                translate([ lid_front_x - wall_standoff + 5, (box_width/2) - (batt_lipo_1200_width/2) - 7, 0 ]) component_battbox_lipo_1200("lidcheck");
+            }
+        }
+
+        if ((battery == "1200 mAH LiPo Front Center") && (part == "box")) {
+                translate([ lid_front_x - wall_standoff -2, 0, 0 ]) component_battbox_lipo_1200("lidcheck");
+        }
+
+        if ((battery == "500 mAH LiPo Front Right") && (part == "box")) {
+            if (box_width < 90) {
+                translate([ lid_front_x - wall_standoff + 1, (box_width/2) - (batt_lipo_1200_width/2) - 5, 0 ]) component_battbox_lipo_500("lidcheck");
+            } else {
+                translate([ lid_front_x - wall_standoff + 5, (box_width/2) - (batt_lipo_1200_width/2) - 5, 0 ]) component_battbox_lipo_500("lidcheck");
+            }
+        }
+
+        if ((battery == "500 mAH LiPo Front Center") && (part == "box")) {
+                translate([ lid_front_x - wall_standoff -2, 0, 0 ]) component_battbox_lipo_500("lidcheck");
+        }
+    }
 }
 
 module place_power_distribution(mode="holes") {
 
     if ((power_distribution_buss == "Long Way") && (part == "lid")) {
-        translate([ 0, 0, lid_thickness ]) component_schmart();
+        translate([ 0, 0, lid_thickness ]) component_schmart(mode);
     }
 
     if ((power_distribution_buss == "Long Way Set Back") && (part == "lid")) {
-        translate([ -11, 0, lid_thickness ]) component_schmart();
+        translate([ -12, 0, lid_thickness ]) component_schmart(mode);
     }
 
     if ((power_distribution_buss == "Wide Way") && (part == "lid")) {
-        translate([ (lid_front_x - 37), 0, lid_thickness ]) rotate([ 0, 0, 90 ]) component_schmart();
+        translate([ (lid_front_x - 42), 0, lid_thickness ]) rotate([ 0, 0, 90 ]) component_schmart(mode);
     }
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff)
+     * these optionally show the lid components when generally displaying the box itself.  the "component" builders have a special
+     * mode called "lidcheck" that shows them in blue but otherwise similar to normal mode.  this mode is only available on parts
+     * that might be reasonably expected to live on the lid.       *
+     *
+     * note that the actual translatations/rotations of of these components is identical to the box placements above, excepting for the 
+     * mode declaration ("lidcheck") and the fact that is called for part == "box" instead of "lid".  
+     * the outer translate / rotate here takes care of moving all lidcheck pieces at once
+     */
+    
+    translate([ 0, 0, (height_of_box + lid_thickness) ]) rotate([ 0, 180, 0 ]) union() {  
+        if ((power_distribution_buss == "Long Way") && (part == "box")) {
+            translate([ 0, 0, lid_thickness ]) component_schmart("lidcheck");
+        }
 
+        if ((power_distribution_buss == "Long Way Set Back") && (part == "box")) {
+            translate([ -12, 0, lid_thickness ]) component_schmart("lidcheck");
+        }
 
-    // TODO: still needs lidcheck
+        if ((power_distribution_buss == "Wide Way") && (part == "box")) {
+            translate([ (lid_front_x - 42), 0, lid_thickness ]) rotate([ 0, 0, 90 ]) component_schmart("lidcheck");
+        }
+    }
 }
 
 
@@ -110,52 +189,119 @@ module place_boost_buck(mode="holes") {
     wall_standoff = body_wall_thickness + lid_lip_thickness;
 
     if ((boost_converter_for_motors == "Front Adjustable") && (part == "lid")) {
-        translate([ (lid_front_x - wall_standoff -14), -((box_width/2) - wall_standoff -23), lid_thickness ]) rotate([ 0, 0, 90 ]) component_amazon_boost();
+        translate([ (lid_front_x - wall_standoff -14), -((box_width/2) - wall_standoff -23), lid_thickness ]) rotate([ 0, 0, 90 ]) component_amazon_boost(mode);
     }
 
     if ((boost_converter_for_motors == "Side Adjustable") && (part == "lid")) {
-        translate([ (lid_front_x - wall_standoff -26), -((box_width/2) - wall_standoff - 13), lid_thickness ]) component_amazon_boost();
+        translate([ (lid_front_x - wall_standoff -26), -((box_width/2) - wall_standoff - 13), lid_thickness ]) component_amazon_boost(mode);
     }
 
     if ((boost_converter_for_motors == "Front Pololu") && (part == "lid")) {
-        translate([ (lid_front_x - wall_standoff - 14), -((box_width/2) - wall_standoff -23), lid_thickness ]) rotate([ 0, 0, 90 ]) component_pololu_boost();
+        translate([ (lid_front_x - wall_standoff - 14), -((box_width/2) - wall_standoff -23), lid_thickness ]) rotate([ 0, 0, 90 ]) component_pololu_boost(mode);
     }
 
     if ((boost_converter_for_motors == "Side Pololu") && (part == "lid")) {
-        translate([ (lid_front_x - wall_standoff - 24 ), -((box_width/2) - wall_standoff - 13), lid_thickness ]) component_pololu_boost();
+        translate([ (lid_front_x - wall_standoff - 24 ), -((box_width/2) - wall_standoff - 13), lid_thickness ]) component_pololu_boost(mode);
     }
 
 
     if (power_distribution_buss == "Wide Way") {
 
         if ((want_3v_buck) && (part == "lid")) {
-            translate([ (lid_front_x - 54), -6, lid_thickness ]) component_adafruit_minibuck();
+            translate([ (lid_front_x - 60), -6, lid_thickness ]) component_adafruit_minibuck(mode);
         }
 
         if ((want_5v_boost) && (part == "lid")) {
-            translate([ (lid_front_x - 54), 6, lid_thickness ]) component_adafruit_miniboost();
+            translate([ (lid_front_x - 60), 6, lid_thickness ]) component_adafruit_miniboost(mode);
         }
 
     } else {
 
-        if ((want_3v_buck) && (part == "lid")) {
-            translate([ 0, -13, lid_thickness ]) component_adafruit_minibuck();
+        if ((boost_converter_for_motors == "Side Adjustable") || (boost_converter_for_motors == "Side Pololu")) {
+            if ((want_3v_buck) && (part == "lid")) {
+                translate([ -12, -18, lid_thickness ]) rotate([ 0, 0, 90 ]) component_adafruit_minibuck(mode);
+            }
+
+            if ((want_5v_boost) && (part == "lid")) {
+                translate([ -12, 18, lid_thickness ]) rotate([ 0, 0, 90 ])component_adafruit_miniboost(mode);
+            }
+        } else {
+            if ((want_3v_buck) && (part == "lid")) {
+                translate([ 0, -13, lid_thickness ]) component_adafruit_minibuck(mode);
+            }
+
+            if ((want_5v_boost) && (part == "lid")) {
+                translate([ 0, 13, lid_thickness ]) component_adafruit_miniboost(mode);
+            }
+        }
+    }
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff)
+     * these optionally show the lid components when generally displaying the box itself.  the "component" builders have a special
+     * mode called "lidcheck" that shows them in blue but otherwise similar to normal mode.  this mode is only available on parts
+     * that might be reasonably expected to live on the lid.       *
+     *
+     * note that the actual translatations/rotations of of these components is identical to the box placements above, excepting for the 
+     * mode declaration ("lidcheck") and the fact that is called for part == "box" instead of "lid".  
+     * the outer translate / rotate here takes care of moving all lidcheck pieces at once
+     */
+    
+    translate([ 0, 0, (height_of_box + lid_thickness) ]) rotate([ 0, 180, 0 ]) union() {  
+
+        if ((boost_converter_for_motors == "Front Adjustable") && (part == "box")) {
+            translate([ (lid_front_x - wall_standoff -14), -((box_width/2) - wall_standoff -23), lid_thickness ]) 
+                rotate([ 0, 0, 90 ]) 
+                component_amazon_boost("lidcheck");
         }
 
-            if ((want_5v_boost) && (part == "lid")) {
-                translate([ 0, 13, lid_thickness ]) component_adafruit_miniboost();
-            }
+        if ((boost_converter_for_motors == "Side Adjustable") && (part == "box")) {
+            translate([ (lid_front_x - wall_standoff -26), -((box_width/2) - wall_standoff - 13), lid_thickness ]) 
+                component_amazon_boost("lidcheck");
+        }
+
+        if ((boost_converter_for_motors == "Front Pololu") && (part == "box")) {
+            translate([ (lid_front_x - wall_standoff - 14), -((box_width/2) - wall_standoff -23), lid_thickness ]) rotate([ 0, 0, 90 ]) 
+                component_pololu_boost("lidcheck");
+        }
+
+        if ((boost_converter_for_motors == "Side Pololu") && (part == "box")) {
+            translate([ (lid_front_x - wall_standoff - 24 ), -((box_width/2) - wall_standoff - 13), lid_thickness ]) 
+                component_pololu_boost("lidcheck");
+        }
 
 
-            if ((want_5v_boost) && (part == "lid")) {
-                translate([ 0, 13, lid_thickness ]) component_adafruit_miniboost();
+        if (power_distribution_buss == "Wide Way") {
+
+            if ((want_3v_buck) && (part == "box")) {
+                translate([ (lid_front_x - 60), -6, lid_thickness ]) component_adafruit_minibuck("lidcheck");
             }
+
+            if ((want_5v_boost) && (part == "box")) {
+                translate([ (lid_front_x - 60), 6, lid_thickness ]) component_adafruit_miniboost("lidcheck");
+            }
+
+        } else {
+
+            if ((boost_converter_for_motors == "Side Adjustable") || (boost_converter_for_motors == "Side Pololu")) {
+                if ((want_3v_buck) && (part == "box")) {
+                    translate([ -12, -18, lid_thickness ]) rotate([ 0, 0, 90 ]) component_adafruit_minibuck("lidcheck");
+                }
+
+                if ((want_5v_boost) && (part == "box")) {
+                    translate([ -12, 18, lid_thickness ]) rotate([ 0, 0, 90 ])component_adafruit_miniboost("lidcheck");
+                }
+            } else {
+                if ((want_3v_buck) && (part == "box")) {
+                    translate([ 0, -13, lid_thickness ]) component_adafruit_minibuck("lidcheck");
+                }
+
+                if ((want_5v_boost) && (part == "box")) {
+                    translate([ 0, 13, lid_thickness ]) component_adafruit_miniboost("lidcheck");
+                }
+            }
+        }
     }
-
-
-
-
-    // TODO: still needs lidcheck
 }
 
 
@@ -630,17 +776,27 @@ module place_mini_toggle_switch(mode="holes") {
     if ((has_toggle_lid_left) && (part == "lid")) {
         translate([ lid_back_x + (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_L_y + (body_wall_thickness + box_corner_inner_radius + keep_away_distance), 0 ]) component_mini_toggle_switch(mode);
     }
+
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff)
+     * these optionally show the lid components when generally displaying the box itself.  the "component" builders have a special
+     * mode called "lidcheck" that shows them in blue but otherwise similar to normal mode.  this mode is only available on parts
+     * that might be reasonably expected to live on the lid.  
+     *
+     * note that the actual translatations/rotations of of these components is identical to the box placements above, excepting for the 
+     * mode declaration ("lidcheck") and the fact that is called for part == "box" instead of "lid".  
+     * the outer translate / rotate here takes care of moving all lidcheck pieces at once
+     */
     
-  
- /* this is an experiment */       
-    if ((has_toggle_lid_right) && (part == "box")) {
-        translate([ box_back_x - (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_R_y - (body_wall_thickness + box_corner_inner_radius + keep_away_distance), height_of_box + lid_thickness ]) rotate([ 0, 180, 0 ]) component_mini_toggle_switch("lidcheck");
+    translate([ 0, 0, (height_of_box + lid_thickness) ]) rotate([ 0, 180, 0 ]) union() {
+        if ((has_toggle_lid_right) && (part == "box")) {
+            translate([ lid_back_x + (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_R_y - (body_wall_thickness + box_corner_inner_radius + keep_away_distance), 0 ]) component_mini_toggle_switch("lidcheck");
+        }
+            
+        if ((has_toggle_lid_left) && (part == "box")) {
+            translate([ lid_back_x + (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_L_y + (body_wall_thickness + box_corner_inner_radius + keep_away_distance), 0 ]) component_mini_toggle_switch("lidcheck");
+        }
     }
-        
-    if ((has_toggle_lid_left) && (part == "box")) {
-        translate([ box_back_x - (body_wall_thickness + box_corner_inner_radius + keep_away_distance),  box_L_y + (body_wall_thickness + box_corner_inner_radius + keep_away_distance), height_of_box + lid_thickness ]) rotate([ 0, 180, 0 ]) component_mini_toggle_switch("lidcheck");
-    }
- /* end of experiment */
 }
 
 
@@ -655,29 +811,51 @@ module place_pushbuttons(mode="holes") {
     keep_away_distance = 20 / 2;
     
    if ((has_button_back_left) && (part == "box")) {
-        translate([ box_back_x,  box_L_y + (body_wall_thickness + box_corner_inner_radius + keep_away_distance), (height_of_box - lid_lip_height - 4  -keep_away_distance)]) rotate([ 0, -90, 0]) component_adafruit_illuminated_pushbutton(mode); 
+        translate([ box_back_x,  box_L_y + (body_wall_thickness + box_corner_inner_radius + keep_away_distance), (height_of_box - lid_lip_height - 4  -keep_away_distance)]) 
+            rotate([ 0, -90, 0]) 
+            component_adafruit_illuminated_pushbutton(mode); 
     } 
     
     if ((has_button_back_right) && (part == "box")) {
-        translate([ box_back_x,  box_R_y - (body_wall_thickness + box_corner_inner_radius + keep_away_distance), (height_of_box - lid_lip_height - 4 - keep_away_distance)]) rotate([ 0, -90, 0]) component_adafruit_illuminated_pushbutton(mode); 
+        translate([ box_back_x,  box_R_y - (body_wall_thickness + box_corner_inner_radius + keep_away_distance), (height_of_box - lid_lip_height - 4 - keep_away_distance)]) 
+            rotate([ 0, -90, 0]) 
+            component_adafruit_illuminated_pushbutton(mode); 
     } 
         
     if ((has_button_lid_left) && (part == "lid")) {
-        translate([ lid_back_x + (body_wall_thickness + keep_away_distance + 5),  box_L_y + (body_wall_thickness + keep_away_distance + 5), 0 ]) component_adafruit_illuminated_pushbutton(mode);
+        translate([ lid_back_x + (body_wall_thickness + keep_away_distance + 5),  box_L_y + (body_wall_thickness + keep_away_distance + 5), 0 ])
+            component_adafruit_illuminated_pushbutton(mode);
     }
         
     if ((has_button_lid_right) && (part == "lid")) {
-        translate([ lid_back_x + (body_wall_thickness + keep_away_distance + 5),  box_R_y - (body_wall_thickness + keep_away_distance + 5), 0 ]) component_adafruit_illuminated_pushbutton(mode); 
+        translate([ lid_back_x + (body_wall_thickness + keep_away_distance + 5),  box_R_y - (body_wall_thickness + keep_away_distance + 5), 0 ]) 
+            component_adafruit_illuminated_pushbutton(mode); 
     } 
-     
- /* this is an experiment */   
-    if ((has_button_lid_right) && (part == "box")) {
-        translate([ box_back_x - (body_wall_thickness +  keep_away_distance + 5),  box_R_y - (body_wall_thickness + keep_away_distance + 5), height_of_box + lid_thickness ]) rotate([ 0, 180, 0 ]) component_adafruit_illuminated_pushbutton("lidcheck"); 
-    }   
-    if ((has_button_lid_left) && (part == "box")) {
-        translate([ box_back_x - (body_wall_thickness + keep_away_distance + 5),  box_L_y + (body_wall_thickness + keep_away_distance + 5), height_of_box + lid_thickness ]) rotate([ 0, 180, 0 ]) component_adafruit_illuminated_pushbutton("lidcheck"); 
-    } 
- /* end of experiment */
+ 
+    /*
+     * LIDCHECK VISUALIZATIONS (optional turnon/turnoff)
+     * these optionally show the lid components when generally displaying the box itself.  the "component" builders have a special
+     * mode called "lidcheck" that shows them in blue but otherwise similar to normal mode.  this mode is only available on parts
+     * that might be reasonably expected to live on the lid.       *
+     *
+     * note that the actual translatations/rotations of of these components is identical to the box placements above, excepting for the 
+     * mode declaration ("lidcheck") and the fact that is called for part == "box" instead of "lid".  
+     * the outer translate / rotate here takes care of moving all lidcheck pieces at once
+     */
+    
+    translate([ 0, 0, (height_of_box + lid_thickness) ]) rotate([ 0, 180, 0 ]) union() {
+
+        if ((has_button_lid_right) && (part == "box")) {
+            translate([ lid_back_x + (body_wall_thickness + keep_away_distance + 5),  box_R_y - (body_wall_thickness + keep_away_distance + 5), 0 ]) 
+                component_adafruit_illuminated_pushbutton("lidcheck"); 
+        }   
+        if ((has_button_lid_left) && (part == "box")) {
+            translate([ lid_back_x + (body_wall_thickness + keep_away_distance + 5),  box_L_y + (body_wall_thickness + keep_away_distance + 5), 0 ])
+                component_adafruit_illuminated_pushbutton("lidcheck");
+        } 
+
+    }
+
 }
 
 

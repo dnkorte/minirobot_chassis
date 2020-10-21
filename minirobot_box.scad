@@ -110,9 +110,13 @@ want_5v_boost = true;
 // this creates 6-30v from LiPo or NiMH for motors; 
 boost_converter_for_motors = "None"; // ["None", "Front Adjustable", "Side Adjustable", "Front Pololu", "Side Pololu"]
 
-battery="2200 mAH Cylindrical Front Right"; // ["2200 mAH Cylindrical Front Right", "2200 mAH Cylindrical Front Center", "2-cell NiMH", "1200 mAH LiPo"]
-
 power_distribution_buss = "Long Way"; // ["none", "Long Way", "Long Way Set Back", "Wide Way"]
+
+battery="2200 mAH Cylindrical Front Right"; // ["2200 mAH Cylindrical Front Right", "2200 mAH Cylindrical Front Center", "1200 mAH LiPo Front Right", "1200 mAH LiPo Front Center", "500 mAH LiPo Front Right", "500 mAH LiPo Front Center"]
+
+// minimum distance between bottom of battery box and bottom of box (airgap)
+airgap_under_batterybox = 10; // [2, 10, 15, 20]
+
 
 /* [Visualization] */
 show_internal_parts_for_collision_check = false;
@@ -218,9 +222,6 @@ use_lid_lip_height = (TI30_mount_diameter == lid_lip_height) ? (lid_lip_height +
 // and ensure that mount is at least "far enough" away from lid panel that it can be fully round
 mount_center_offset_from_boxtop = (lid_lip_height < TI30_mount_diameter) ? (TI30_mount_diameter/2) : (use_lid_lip_height / 2);
 
-//caster_to_ground_gap    caster_height    wheel_diameter
-//shaft height above box bottom = wheel_radius - (caster_length+clearance gap)
-
 wheel_radius = wheel_diameter / 2;
 // note motor shaft is lowered by small gap in order to raise box a bit
 // so that bumps or surface irregularities don't lift wheels off the ground
@@ -238,6 +239,11 @@ if ((linesensor_snout != "none") && (caster_height > 20)) {
     echo("<span style='background-color:red'>NOTICE: line follower works best with 12 - 20mm caster; please use a shorter caster</span>");
 }
 
+/*
+ * *******************************************************************************
+ * pre-calculate some basic parameters to help with placement in placer module
+ * *******************************************************************************
+ */
 
 // x,y location of box and lid walls (remember that lid is generated "upside down"
 box_front_x = -(box_length/2);
@@ -250,7 +256,8 @@ lid_back_x = -(box_length/2);
 lid_L_y = -(box_width/2);
 lid_R_y = +(box_width/2);
 
-max_height_for_batt = height_of_box - body_bottom_thickness;
+// this means that the battery box (any style) will reach no closer than XX mm above inside box bottom
+max_length_for_battbox = height_of_box - body_bottom_thickness - airgap_under_batterybox;
 
 /*
  * *****************************************************************
@@ -299,7 +306,7 @@ module box() {
         place_pololu_miniplastic_motor("holes");
         place_battery("holes");
         place_power_distribution("holes");
-        place_boost_buck(mode="holes");
+        place_boost_buck("holes");
     }
     
     // now if we want to check for collisions, we show a blue image of lid lip
@@ -337,7 +344,7 @@ module box() {
     place_pololu_miniplastic_motor("adds");    
     place_battery("adds");
     place_power_distribution("adds");
-    place_boost_buck(mode="adds");
+    place_boost_buck("adds");
 }
 
 module lid() {
